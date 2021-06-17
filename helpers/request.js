@@ -41,6 +41,7 @@ const request = (data) =>
     req.write(postData);
     req.end();
   }).catch((error) => console.log(error));
+
 /**
  * Retrieve the DLive username (different than displayname)
  *
@@ -57,6 +58,25 @@ const getUsername = (displayname) =>
      }`,
     variables: {
       displayname,
+    },
+  });
+
+/**
+ * Retrieve the DLive displayname (different than username)
+ *
+ * @param {string} username
+ */
+const getDisplayname = (username) =>
+  request({
+    operationName: "User",
+    query: `query User($username: String!) {
+   user(displayname: $username) {
+     displayname
+     __typename
+   }
+ }`,
+    variables: {
+      username,
     },
   });
 
