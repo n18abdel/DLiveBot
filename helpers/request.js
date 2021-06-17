@@ -63,13 +63,13 @@ const getUsername = (displayname) =>
 /**
  * Retrieve current stream info
  *
- * @param {string} displayname
+ * @param {string} username
  */
-const getStreamInfo = (displayname) =>
+const getStreamInfo = (username) =>
   request({
     operationName: "LivestreamPage",
-    query: `query LivestreamPage($displayname: String!) {
-       userByDisplayName(displayname: $displayname) {
+    query: `query LivestreamPage($username: String!) {
+       user(username: $username) {
          livestream {
            title
            thumbnailUrl
@@ -90,7 +90,7 @@ const getStreamInfo = (displayname) =>
        }
      }`,
     variables: {
-      displayname,
+      username,
     },
   });
 /**
