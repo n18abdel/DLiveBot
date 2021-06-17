@@ -243,13 +243,13 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
 /**
  * Create a websocket to listen to the chat of the given streamer
  *
- * @param {string} displayname
+ * @param {string} username
  * @param {string} guildId
  * @param {string} channelId
  * @param {object} botState
  * @return {WebSocket}
  */
-const createChatWebSocket = (displayname, guildId, channelId, botState) => {
+const createChatWebSocket = (username, guildId, channelId, botState) => {
   const {
     client,
     settings,
@@ -270,20 +270,17 @@ const createChatWebSocket = (displayname, guildId, channelId, botState) => {
   ws.onopen = () => {
     ws.send('{"type":"connection_init","payload":{}}');
 
-    getUsername(displayname)
+    const joinmsg = createJoinMsg(username, (chest = false));
+    ws.send(JSON.stringify(joinmsg));
+
+    getStreamInfo(username)
       .then((response) => {
-        let username = response.userByDisplayName.username;
-        let joinmsg = createJoinMsg(username, (chest = false));
-        ws.send(JSON.stringify(joinmsg));
-      })
-      .then(() => getStreamInfo(displayname))
-      .then((response) => {
-        let stream = response.userByDisplayName.livestream;
+        let stream = response.user.livestream;
         let isLive = !(stream == null);
 
-        if (!wasLive[guildId][displayname] && isLive) {
+        if (!wasLive[guildId][username] && isLive) {
           newAlertOrExistingOne(stream);
-        } else if (wasLive[guildId][displayname] && !isLive) {
+        } else if (wasLive[guildId][username] && !isLive) {
           streamerGoOffline();
         }
       })
