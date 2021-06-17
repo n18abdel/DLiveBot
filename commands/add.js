@@ -45,29 +45,47 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
       settings
     );
   }
-  if (displayname in wasLive[guildId]) {
-    interaction
-      .reply(createMessageOptions(`Une alerte existe déjà pour ${displayname}`))
-      .catch((error) => console.log(error));
-  } else {
-    wasLive[guildId][displayname] = false;
-    await updateDatabase(
-      wasLive,
-      alertChannels,
-      alertHistory,
-      lastStreams,
-      settings
-    );
 
-    let ws = createChatWebSocket(displayname, guildId, channelId, botState);
-    let cs = createChestWebSocket(displayname, guildId, channelId, botState);
-    websockets[guildId].push(ws);
-    websockets[guildId].push(cs);
+  getUsername(displayname)
+    .then((response) => {
+      if (response.userByDisplayName) {
+        const username = response.userByDisplayName.username;
+        if (username in wasLive[guildId]) {
+          interaction
+            .reply(
+              createMessageOptions(`Une alerte existe déjà pour ${displayname}`)
+            )
+            .catch((error) => console.log(error));
+        } else {
+          wasLive[guildId][username] = false;
+          await updateDatabase(
+            wasLive,
+            alertChannels,
+            alertHistory,
+            lastStreams,
+            settings
+          );
 
-    interaction
-      .reply(createMessageOptions(`Alerte paramétrée pour ${displayname}`))
-      .catch((error) => console.log(error));
-  }
+          let ws = createChatWebSocket(username, guildId, channelId, botState);
+          let cs = createChestWebSocket(username, guildId, channelId, botState);
+          websockets[guildId].push(ws);
+          websockets[guildId].push(cs);
+
+          interaction
+            .reply(
+              createMessageOptions(`Alerte paramétrée pour ${displayname}`)
+            )
+            .catch((error) => console.log(error));
+        }
+      } else {
+        interaction.reply(
+          createMessageOptions(
+            `Aucun streamer avec le nom ${displayname} a été trouvé\nVérifiez votre saisie`
+          )
+        );
+      }
+    })
+    .catch((error) => console.log(error));
 };
 
 const add = {
