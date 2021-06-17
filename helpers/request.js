@@ -316,8 +316,8 @@ const createChatWebSocket = (username, guildId, channelId, botState) => {
    */
   const newAlertOrExistingOne = (stream) => {
     if (
-      lastStreams[guildId][displayname] &&
-      (stream.permlink == lastStreams[guildId][displayname].permlink ||
+      lastStreams[guildId][username] &&
+      (stream.permlink == lastStreams[guildId][username].permlink ||
         sameTitleWithinDelay(stream))
     ) {
       /**
@@ -325,11 +325,12 @@ const createChatWebSocket = (username, guildId, channelId, botState) => {
        * or
        * there was a stream with the same title not "so long ago"
        */
-      const existingMsgId = alertHistory[guildId][displayname];
+      const existingMsgId = alertHistory[guildId][username];
 
       editAlertMessage(
         {
           displayname,
+          username,
           stream,
           channelId,
           channelName,
@@ -340,7 +341,7 @@ const createChatWebSocket = (username, guildId, channelId, botState) => {
         },
         botState
       ).then(async () => {
-        wasLive[guildId][displayname] = true;
+        wasLive[guildId][username] = true;
         -(await updateDatabase(
           wasLive,
           alertChannels,
@@ -352,6 +353,7 @@ const createChatWebSocket = (username, guildId, channelId, botState) => {
     } else {
       sendAlertMessage(
         displayname,
+        username,
         stream,
         guildId,
         channelId,
