@@ -32,7 +32,7 @@ const func = async ({ interaction, botState }) => {
     .addField("Modifier le délai", "/set_delay", true)
     .addField("Exemple", "/set_delay 10", true)
     .addField("À propos du délai", delayExplainer);
-  const message = createMessageOptions(help, (embed = true));
+  const message = createMessageOptions(help, { embed: true });
   interaction.reply(message).catch((error) => console.log(error));
 };
 

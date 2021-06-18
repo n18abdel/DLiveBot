@@ -19,8 +19,8 @@ const processMessage = (message, guildId, displayname, { client }) => {
   processedMessage = processedMessage.replace(/<displayname>/g, displayname);
   const emojis = message.matchAll(/:(.+?):/g);
 
-  retrievedEmojis = {};
-  for (let emoji of emojis) {
+  const retrievedEmojis = {};
+  for (const emoji of emojis) {
     const emojiName = emoji[1];
     if (!retrievedEmojis[emojiName]) {
       const retrievedEmoji = client.guilds.cache
@@ -51,7 +51,7 @@ const getAlertMessageOptions = (
   { displayname, stream, online, chestValue, permlink, guildId, offlineImage },
   botState
 ) => {
-  const { settings, client } = botState;
+  const { settings } = botState;
   const msgEmbed = new Discord.MessageEmbed()
     .setColor(settings.color)
     .setFooter(processMessage(settings.footer, guildId, displayname, botState));
@@ -240,7 +240,7 @@ const editAlertMessage = (
         ],
       });
     })
-    .then(async (message) => {
+    .then(async () => {
       console.log(
         "[Discord]",
         `Edited announce msg to #${channelName} on ${guildName} for ${displayname}`
@@ -282,11 +282,11 @@ const editAlertMessage = (
  */
 const selectTitlePermlink = ({ title, permlink }) => ({ title, permlink });
 
-const createMessageOptions = (message, embed) => {
+const createMessageOptions = (input, { embed = false }) => {
   if (embed) {
-    return { embeds: [message], ephemeral: true };
+    return { embeds: [input], ephemeral: true };
   } else {
-    return { content: message, ephemeral: true };
+    return { content: input, ephemeral: true };
   }
 };
 

@@ -22,7 +22,7 @@ const {
 const fs = require("fs");
 const commandsList = fs.readdirSync("./commands"); // return an array of all the files and folders inside the commands folder
 client.commands = {}; // initiate value for the command list of client
-for (item of commandsList) {
+for (const item of commandsList) {
   if (item.match(/\.js$/)) {
     // only take js files
     const commandName = item.slice(0, -3);
