@@ -2,7 +2,7 @@ const { createMessageOptions } = require("../helpers/message");
 const { getUsername } = require("../helpers/request");
 
 const commandData = {
-  name: "getUsername",
+  name: "get_username",
   description: "Trouver l'username d'une personne",
   options: [
     {

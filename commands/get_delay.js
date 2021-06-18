@@ -2,7 +2,7 @@ const { createMessageOptions } = require("../helpers/message");
 const { delayExplainer } = require("../constants");
 
 const commandData = {
-  name: "getDelay",
+  name: "get_delay",
   description: "Voir le délai paramétré",
   defaultPermission: false,
 };
