@@ -29,12 +29,13 @@ const requestOptions = {
  */
 const request = (data) =>
   new Promise((resolve, reject) => {
-    const postData = JSON.stringify(data);
+    const { operationName, ...toPost } = data;
+    const postData = JSON.stringify(toPost);
     const req = https.request(requestOptions, (res) => {
       res.setEncoding("utf-8");
       res.on("data", (responseText) => {
         const response = JSON.parse(responseText).data;
-        resolve(response[data.operationName]);
+        resolve(response[operationName]);
       });
       res.on("error", (error) => reject(error));
     });
@@ -70,7 +71,7 @@ const getDisplayname = (username) =>
   request({
     operationName: "user",
     query: `query User($username: String!) {
-      user(displayname: $username) {
+      user(username: $username) {
         displayname
         __typename
       }
@@ -121,7 +122,7 @@ const getStreamInfo = (username) =>
  * @param {boolean} chest - whether to subscribe to chest or chat
  * @return {object}
  */
-const createJoinMsg = (username, { chest = false }) => {
+const createJoinMsg = (username, { chest = false } = {}) => {
   if (chest) {
     return {
       id: "1",
@@ -178,7 +179,7 @@ const createChestWebSocket = (
 
     getStreamInfo(username)
       .then((user) => {
-        const { stream } = user.stream;
+        const { livestream: stream } = user;
         if (wasLive[guildId][username]) {
           const existingMsgId = alertHistory[guildId][username];
 
@@ -382,7 +383,7 @@ const createChatWebSocket = (
   const streamerGoLive = () =>
     getStreamInfo(username)
       .then((user) => {
-        const { stream } = user;
+        const { livestream: stream } = user;
         if (!stream && goLiveLoop < 15) {
           /**
            * stream shouldn't be null as the streamer went live
@@ -438,12 +439,12 @@ const createChatWebSocket = (
   ws.onopen = () => {
     ws.send('{"type":"connection_init","payload":{}}');
 
-    const joinmsg = createJoinMsg(username, { chest: true });
+    const joinmsg = createJoinMsg(username, { chest: false });
     ws.send(JSON.stringify(joinmsg));
 
     getStreamInfo(username)
       .then((user) => {
-        const { stream } = user;
+        const { livestream: stream } = user;
         const isLive = !(stream == null);
 
         if (!wasLive[guildId][username] && isLive) {
