@@ -4,7 +4,7 @@
  * and startTimeStream2 - endTimeStream1 < sameTitleDelay
  * then only one alert message will be sent
  */
-const sameTitleDelayDefault = 5;
+const sameTitleDelayDefault = 15;
 
 // color used for Discord embed messages
 const colorDefault = "#ffd300";
