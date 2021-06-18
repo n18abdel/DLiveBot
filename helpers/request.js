@@ -395,9 +395,9 @@ const createChatWebSocket = (
 
   let goLiveLoop = 0;
   const streamerGoLive = () =>
-    getStreamInfo(displayname)
+    getStreamInfo(username)
       .then((response) => {
-        let stream = response.userByDisplayName.livestream;
+        const stream = response.user.livestream;
         if (!stream && goLiveLoop < 15) {
           /**
            * stream shouldn't be null as the streamer went live
