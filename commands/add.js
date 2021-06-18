@@ -30,7 +30,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
     websockets,
   } = botState;
 
-  const displayname = args.displayname;
+  const { displayname } = args;
 
   if (!(guildId in wasLive)) {
     websockets[guildId] = [];
@@ -50,7 +50,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
   getUsername(displayname)
     .then(async (response) => {
       if (response.userByDisplayName) {
-        const username = response.userByDisplayName.username;
+        const { username } = response.userByDisplayName;
         if (username in wasLive[guildId]) {
           interaction
             .reply(
@@ -67,8 +67,18 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
             settings
           );
 
-          let ws = createChatWebSocket(username, guildId, channelId, botState);
-          let cs = createChestWebSocket(username, guildId, channelId, botState);
+          const ws = createChatWebSocket(
+            username,
+            guildId,
+            channelId,
+            botState
+          );
+          const cs = createChestWebSocket(
+            username,
+            guildId,
+            channelId,
+            botState
+          );
           websockets[guildId].push(ws);
           websockets[guildId].push(cs);
 

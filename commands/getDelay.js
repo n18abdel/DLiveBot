@@ -2,7 +2,7 @@ const { createMessageOptions } = require("../helpers/message");
 const { delayExplainer } = require("../constants");
 
 const commandData = {
-  name: "get_delay",
+  name: "getDelay",
   description: "Voir le délai paramétré",
   defaultPermission: false,
 };
@@ -21,9 +21,9 @@ const func = async ({ interaction, botState }) => {
     .catch((error) => console.log(error));
 };
 
-const get_delay = {
+const getDelay = {
   commandData,
   func,
 };
 
-module.exports = get_delay;
+module.exports = getDelay;

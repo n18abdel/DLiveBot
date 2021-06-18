@@ -3,7 +3,7 @@ const { createMessageOptions } = require("../helpers/message");
 const { delayExplainer } = require("../constants");
 
 const commandData = {
-  name: "set_delay",
+  name: "setDelay",
   description: "Modifier le délai (mettre 0 pour désactiver le délai)",
   options: [
     {
@@ -20,7 +20,7 @@ const func = async ({ interaction, args, botState }) => {
   const { settings, wasLive, alertHistory, lastStreams, alertChannels } =
     botState;
 
-  const delay = args.delay;
+  const { delay } = args;
 
   settings.sameTitleDelay = Number(delay);
 
@@ -44,9 +44,9 @@ const func = async ({ interaction, args, botState }) => {
     .catch((error) => console.log(error));
 };
 
-const set_delay = {
+const setDelay = {
   commandData,
   func,
 };
 
-module.exports = set_delay;
+module.exports = setDelay;

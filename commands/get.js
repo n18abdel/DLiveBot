@@ -9,7 +9,7 @@ const commandData = {
 const func = async ({ interaction, guildId, botState }) => {
   const { wasLive } = botState;
 
-  if (wasLive[guildId] == null || Object.keys(wasLive[guildId]).length == 0) {
+  if (wasLive[guildId] === null || Object.keys(wasLive[guildId]).length === 0) {
     interaction
       .reply(createMessageOptions("Aucune alerte paramétrée"))
       .catch((error) => console.log(error));
