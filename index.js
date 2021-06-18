@@ -20,11 +20,12 @@ const { parseDatabase, updateDatabase, logLoginTime } = require("./helpers/db");
 const {
   createChatWebSocket,
   createChestWebSocket,
+  getDisplayname,
 } = require("./helpers/request");
 
 client.commands = {};
 glob.sync("./commands/*.js").forEach((commandFile) => {
-  const commandName = commandFile.slice(0, -3);
+  const commandName = commandFile.match(/\.\/commands\/(.*)\.js/)[1];
   client.commands[commandName] = require(commandFile);
 });
 
@@ -34,7 +35,7 @@ glob.sync("./commands/*.js").forEach((commandFile) => {
  */
 const websockets = {};
 
-/** {guildId: {streamerDisplayname: boolean}}
+/** {guildId: {streamerUsername: boolean}}
  * Previous streaming state of added streamers
  */
 let wasLive = {};
@@ -44,13 +45,13 @@ let wasLive = {};
  */
 let alertChannels = {};
 
-/** {guildId: {streamerDisplayname: messageId}}
+/** {guildId: {streamerUsername: messageId}}
  * History of the latest sent alert messages
  * to be able to update them
  */
 let alertHistory = {};
 
-/** {guildId: {streamerDisplayname: stream}}
+/** {guildId: {streamerUsername: stream}}
  * Latest streams with sent alert
  */
 let lastStreams = {};
@@ -130,22 +131,29 @@ client.on("ready", async () => {
   Object.keys(wasLive).forEach(async (guildId) => {
     if (client.guilds.cache.get(guildId)) {
       websockets[guildId] = [];
-      Object.keys(wasLive[guildId]).forEach((displayname) => {
+      Object.keys(wasLive[guildId]).forEach((username) => {
         const channelId = alertChannels[guildId];
-        const ws = createChatWebSocket(
-          displayname,
-          guildId,
-          channelId,
-          getBotState()
-        );
-        const cs = createChestWebSocket(
-          displayname,
-          guildId,
-          channelId,
-          getBotState()
-        );
-        websockets[guildId].push(ws);
-        websockets[guildId].push(cs);
+
+        getDisplayname(username)
+          .then((displayname) => {
+            const ws = createChatWebSocket(
+              username,
+              displayname,
+              guildId,
+              channelId,
+              getBotState()
+            );
+            const cs = createChestWebSocket(
+              username,
+              displayname,
+              guildId,
+              channelId,
+              getBotState()
+            );
+            websockets[guildId].push(ws);
+            websockets[guildId].push(cs);
+          })
+          .catch((error) => console.log(error));
       });
     } else {
       await clear(guildId);
