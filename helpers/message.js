@@ -117,6 +117,7 @@ const getAlertMessageOptions = (
  * Send alert message to the given channel
  *
  * @param {string} displayname
+ * @param {string} username
  * @param {string} stream
  * @param {string} guildId
  * @param {string} channelId
@@ -126,6 +127,7 @@ const getAlertMessageOptions = (
  */
 const sendAlertMessage = (
   displayname,
+  username,
   stream,
   guildId,
   channelId,
@@ -168,9 +170,9 @@ const sendAlertMessage = (
         `Sent announce msg to #${channelName} on ${guildName} for ${displayname}`
       );
 
-      wasLive[guildId][displayname] = true;
-      alertHistory[guildId][displayname] = message.id;
-      lastStreams[guildId][displayname] = selectTitlePermlink(stream);
+      wasLive[guildId][username] = true;
+      alertHistory[guildId][username] = message.id;
+      lastStreams[guildId][username] = selectTitlePermlink(stream);
       await updateDatabase(
         wasLive,
         alertChannels,
