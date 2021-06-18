@@ -3,7 +3,7 @@ const { createMessageOptions } = require("../helpers/message");
 const { delayExplainer } = require("../constants");
 
 const commandData = {
-  name: "setDelay",
+  name: "set_delay",
   description: "Modifier le délai (mettre 0 pour désactiver le délai)",
   options: [
     {
