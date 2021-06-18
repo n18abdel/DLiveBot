@@ -19,9 +19,8 @@ const func = async ({ interaction, args }) => {
   const { displayname } = args;
 
   getUsername(displayname)
-    .then((response) => {
-      if (response.userByDisplayName) {
-        const { username } = response.userByDisplayName;
+    .then((username) => {
+      if (username) {
         interaction.reply(
           createMessageOptions(`L'username de ${displayname} est:\n${username}`)
         );

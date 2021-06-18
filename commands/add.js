@@ -48,9 +48,8 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
   }
 
   getUsername(displayname)
-    .then(async (response) => {
-      if (response.userByDisplayName) {
-        const { username } = response.userByDisplayName;
+    .then(async (username) => {
+      if (username) {
         if (username in wasLive[guildId]) {
           interaction
             .reply(
