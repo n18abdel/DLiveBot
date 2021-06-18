@@ -120,7 +120,7 @@ const getStreamInfo = (username) =>
  * @param {boolean} chest - whether to subscribe to chest or chat
  * @return {object}
  */
-const createJoinMsg = (username, chest) => {
+const createJoinMsg = (username, { chest = false }) => {
   if (chest) {
     return {
       id: "1",
@@ -163,7 +163,7 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
 
     getUsername(displayname).then((response) => {
       let username = response.userByDisplayName.username;
-      let joinmsg = createJoinMsg(username, (chest = true));
+      let joinmsg = createJoinMsg(username, { chest: true });
       cs.send(JSON.stringify(joinmsg));
     });
   };
@@ -269,7 +269,13 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
  * @param {object} botState
  * @return {WebSocket}
  */
-const createChatWebSocket = (username, guildId, channelId, botState) => {
+const createChatWebSocket = (
+  username,
+  displayname,
+  guildId,
+  channelId,
+  botState
+) => {
   const {
     client,
     settings,
@@ -290,7 +296,7 @@ const createChatWebSocket = (username, guildId, channelId, botState) => {
   ws.onopen = () => {
     ws.send('{"type":"connection_init","payload":{}}');
 
-    const joinmsg = createJoinMsg(username, (chest = false));
+    const joinmsg = createJoinMsg(username, { chest: true });
     ws.send(JSON.stringify(joinmsg));
 
     getStreamInfo(username)
@@ -499,5 +505,6 @@ module.exports = {
   createChatWebSocket,
   createChestWebSocket,
   getUsername,
+  getDisplayname,
   closeWebsockets,
 };

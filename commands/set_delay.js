@@ -23,6 +23,7 @@ const func = async ({ interaction, args, botState }) => {
   const delay = args.delay;
 
   settings.sameTitleDelay = Number(delay);
+
   await updateDatabase(
     wasLive,
     alertChannels,
@@ -30,11 +31,14 @@ const func = async ({ interaction, args, botState }) => {
     lastStreams,
     settings
   );
+
+  let answer;
   if (settings.sameTitleDelay <= 0) {
     answer = `Le délai est maintenant désactivé\n\n${delayExplainer}`;
   } else {
     answer = `Le délai paramétré est maintenant de ${settings.sameTitleDelay} minutes\n\n${delayExplainer}`;
   }
+
   interaction
     .reply(createMessageOptions(answer))
     .catch((error) => console.log(error));

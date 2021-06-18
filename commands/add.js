@@ -3,6 +3,7 @@ const { createMessageOptions } = require("../helpers/message");
 const {
   createChatWebSocket,
   createChestWebSocket,
+  getUsername,
 } = require("../helpers/request");
 
 const commandData = {
@@ -47,7 +48,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
   }
 
   getUsername(displayname)
-    .then((response) => {
+    .then(async (response) => {
       if (response.userByDisplayName) {
         const username = response.userByDisplayName.username;
         if (username in wasLive[guildId]) {
