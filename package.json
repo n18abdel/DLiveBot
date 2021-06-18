@@ -10,14 +10,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^13.0.0-dev.02693bc02f45980d8165820a103220f0027b96b7",
+    "discord.js": "^13.0.0-dev.2d12db000f2a0a22a8919d7a63989a6e762ae335",
     "express": "^4.17.1",
     "firebase-admin": "^9.9.0",
     "glob": "^7.1.7",
     "moment-timezone": "^0.5.33",
-    "ws": "^7.4.6"
+    "ws": "^7.5.0"
   },
   "devDependencies": {
-    "eslint": "^7.28.0"
+    "eslint": "^7.29.0"
   }
 }

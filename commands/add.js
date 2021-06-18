@@ -51,11 +51,9 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
     .then(async (username) => {
       if (username) {
         if (username in wasLive[guildId]) {
-          interaction
-            .reply(
-              createMessageOptions(`Une alerte existe déjà pour ${displayname}`)
-            )
-            .catch((error) => console.log(error));
+          interaction.reply(
+            createMessageOptions(`Une alerte existe déjà pour ${displayname}`)
+          );
         } else {
           wasLive[guildId][username] = false;
           await updateDatabase(
@@ -83,11 +81,9 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
           websockets[guildId].push(ws);
           websockets[guildId].push(cs);
 
-          interaction
-            .reply(
-              createMessageOptions(`Alerte paramétrée pour ${displayname}`)
-            )
-            .catch((error) => console.log(error));
+          interaction.reply(
+            createMessageOptions(`Alerte paramétrée pour ${displayname}`)
+          );
         }
       } else {
         interaction.reply(

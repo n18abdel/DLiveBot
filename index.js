@@ -173,7 +173,7 @@ const getOptions = (interaction) => {
   const args = {};
 
   if (options) {
-    options.values().forEach((option) => {
+    Array.from(options.values()).forEach((option) => {
       const { name, value } = option;
       args[name] = value;
     });
@@ -216,12 +216,12 @@ client.on("interaction", async (interaction) => {
     );
     const isAlertChannel = interaction.channel.name.includes("alerte");
     if (interaction.isCommand() && isAdmin && isAlertChannel) {
-      const guildId = interaction.guild.id;
-      const channelId = interaction.channel.id;
-      const args = getOptions(interaction);
-      const botState = getBotState();
-
       if (interaction.commandName in client.commands) {
+        const guildId = interaction.guild.id;
+        const channelId = interaction.channel.id;
+        const args = getOptions(interaction);
+        const botState = getBotState();
+
         client.commands[interaction.commandName].func({
           interaction,
           guildId,

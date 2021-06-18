@@ -283,7 +283,7 @@ const editAlertMessage = (
     .catch((error) => console.log(error));
 };
 
-const createMessageOptions = (input, { embed = false }) => {
+const createMessageOptions = (input, { embed = false } = {}) => {
   if (embed) {
     return { embeds: [input], ephemeral: true };
   }
