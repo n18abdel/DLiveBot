@@ -392,17 +392,21 @@ const createChatWebSocket = (
       .catch((err) => console.log(err));
 
   const streamerGoOffline = () =>
-    getStreamInfo(displayname)
+    getStreamInfo(username)
       .then((response) => {
-        const finishedAt = response.userByDisplayName.lastStreamedAt;
-        const { offlineImage } = response.userByDisplayName;
-        const stream = response.userByDisplayName.livestream;
+        const {
+          lastStreamedAt: finishedAt,
+          offlineImage,
+          livestream: stream,
+          displayname,
+        } = response.user;
         const existingMsgId = alertHistory[guildId][displayname];
         const { permlink } = lastStreams[guildId][displayname];
 
         editAlertMessage(
           {
             displayname,
+            username,
             stream,
             channelId,
             channelName,
