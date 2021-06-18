@@ -2,7 +2,7 @@ const https = require("https");
 const WebSocket = require("ws");
 const moment = require("moment-timezone");
 
-const { updateDatabase } = require("../helpers/db");
+const { updateDatabase } = require("./db");
 const { sendAlertMessage, editAlertMessage } = require("./message");
 
 // delay in seconds without heartbeat
@@ -130,15 +130,14 @@ const createJoinMsg = (username, { chest = false }) => {
         query: `subscription{treasureChestMessageReceived(streamer:"${username}"){__typename}}`,
       },
     };
-  } else {
-    return {
-      id: "1",
-      type: "start",
-      payload: {
-        query: `subscription{streamMessageReceived(streamer:"${username}"){__typename}}`,
-      },
-    };
   }
+  return {
+    id: "1",
+    type: "start",
+    payload: {
+      query: `subscription{streamMessageReceived(streamer:"${username}"){__typename}}`,
+    },
+  };
 };
 /**
  * Create a websocket to listen to the chest of the given streamer
@@ -153,7 +152,7 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
   const { client, wasLive, alertHistory, websockets } = botState;
   const guildName = client.guilds.cache.get(guildId).name;
   const channelName = client.channels.cache.get(channelId).name;
-  let cs = new WebSocket("wss://graphigostream.prd.dlive.tv/", "graphql-ws");
+  const cs = new WebSocket("wss://graphigostream.prd.dlive.tv/", "graphql-ws");
 
   /**
    * Initialize the chest websocket
@@ -163,8 +162,8 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
     cs.send('{"type":"connection_init","payload":{}}');
 
     getUsername(displayname).then((response) => {
-      let username = response.userByDisplayName.username;
-      let joinmsg = createJoinMsg(username, { chest: true });
+      const { username } = response.userByDisplayName;
+      const joinmsg = createJoinMsg(username, { chest: true });
       cs.send(JSON.stringify(joinmsg));
     });
   };
@@ -175,7 +174,7 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
 
     getStreamInfo(displayname)
       .then((response) => {
-        let stream = response.userByDisplayName.livestream;
+        const stream = response.userByDisplayName.livestream;
         if (wasLive[guildId][displayname]) {
           const existingMsgId = alertHistory[guildId][displayname];
 
@@ -194,7 +193,7 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
             botState
           );
         } else {
-          let isLive = !(stream == null);
+          const isLive = !(stream == null);
           if (isLive) {
             // there was a bug, the streamer went live without any sent alert
 
@@ -216,17 +215,17 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
   /**
    * Process messages from the chest websocket
    *
-   * @param {*} msg
+   * @param {*} rawMsg
    */
-  cs.onmessage = (msg) => {
-    msg = JSON.parse(msg.data);
+  cs.onmessage = (rawMsg) => {
+    const msg = JSON.parse(rawMsg.data);
 
-    if (msg.type == "connection_ack") {
+    if (msg.type === "connection_ack") {
       console.log(
         "[WebSocket]",
         `${guildName} - Connected to chest websocket of ${displayname}`
       );
-    } else if (msg.type == "ka") {
+    } else if (msg.type === "ka") {
       // The server sends a "ka" message every 25 seconds
       // https://docs.dlive.tv/api/api/subscription-web-socket
       clearTimeout(cs.pingTimeout);
@@ -235,18 +234,18 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
       // the "ka" message 2mins after the last one
       cs.pingTimeout = setTimeout(() => {
         cs.terminate();
-        let newCs = createChestWebSocket(displayname, guildId, channelId);
+        const newCs = createChestWebSocket(displayname, guildId, channelId);
         websockets[guildId].push(newCs);
         console.log(
           "[WebSocket]",
           `${guildName} - Restarting chest websocket of ${displayname}`
         );
       }, timeoutDelay * 1000);
-    } else if (msg.type != "ka") {
-      msg = msg.payload.data.treasureChestMessageReceived;
+    } else if (msg.type !== "ka") {
+      const innerMsg = msg.payload.data.treasureChestMessageReceived;
 
-      if (msg.type == "ValueUpdated") {
-        updateChestValue(msg);
+      if (innerMsg.type === "ValueUpdated") {
+        updateChestValue(innerMsg);
       }
     }
   };
@@ -288,31 +287,7 @@ const createChatWebSocket = (
   } = botState;
   const guildName = client.guilds.cache.get(guildId).name;
   const channelName = client.channels.cache.get(channelId).name;
-  let ws = new WebSocket("wss://graphigostream.prd.dlive.tv/", "graphql-ws");
-
-  /**
-   * Initialize the chat websocket
-   *
-   */
-  ws.onopen = () => {
-    ws.send('{"type":"connection_init","payload":{}}');
-
-    const joinmsg = createJoinMsg(username, { chest: true });
-    ws.send(JSON.stringify(joinmsg));
-
-    getStreamInfo(username)
-      .then((response) => {
-        let stream = response.user.livestream;
-        let isLive = !(stream == null);
-
-        if (!wasLive[guildId][username] && isLive) {
-          newAlertOrExistingOne(stream);
-        } else if (wasLive[guildId][username] && !isLive) {
-          streamerGoOffline();
-        }
-      })
-      .catch((err) => console.log(err));
-  };
+  const ws = new WebSocket("wss://graphigostream.prd.dlive.tv/", "graphql-ws");
 
   /**
    * Check whether a stream with the same title
@@ -322,7 +297,7 @@ const createChatWebSocket = (
    * @return {boolean}
    */
   const sameTitleWithinDelay = (stream) =>
-    stream.title == lastStreams[guildId][displayname].title &&
+    stream.title === lastStreams[guildId][displayname].title &&
     moment
       .duration(
         moment
@@ -343,10 +318,10 @@ const createChatWebSocket = (
    */
   const newAlertOrExistingOne = (stream) => {
     getDisplayname(username).then((response) => {
-      const displayname = response.user.displayname;
+      const { displayname } = response.user;
       if (
         lastStreams[guildId][username] &&
-        (stream.permlink == lastStreams[guildId][username].permlink ||
+        (stream.permlink === lastStreams[guildId][username].permlink ||
           sameTitleWithinDelay(stream))
       ) {
         /**
@@ -371,13 +346,13 @@ const createChatWebSocket = (
           botState
         ).then(async () => {
           wasLive[guildId][username] = true;
-          -(await updateDatabase(
+          await updateDatabase(
             wasLive,
             alertChannels,
             alertHistory,
             lastStreams,
             settings
-          ));
+          );
         });
       } else {
         sendAlertMessage(
@@ -420,10 +395,10 @@ const createChatWebSocket = (
     getStreamInfo(displayname)
       .then((response) => {
         const finishedAt = response.userByDisplayName.lastStreamedAt;
-        const offlineImage = response.userByDisplayName.offlineImage;
+        const { offlineImage } = response.userByDisplayName;
         const stream = response.userByDisplayName.livestream;
         const existingMsgId = alertHistory[guildId][displayname];
-        const permlink = lastStreams[guildId][displayname].permlink;
+        const { permlink } = lastStreams[guildId][displayname];
 
         editAlertMessage(
           {
@@ -445,19 +420,43 @@ const createChatWebSocket = (
       .catch((err) => console.log(err));
 
   /**
+   * Initialize the chat websocket
+   *
+   */
+  ws.onopen = () => {
+    ws.send('{"type":"connection_init","payload":{}}');
+
+    const joinmsg = createJoinMsg(username, { chest: true });
+    ws.send(JSON.stringify(joinmsg));
+
+    getStreamInfo(username)
+      .then((response) => {
+        const stream = response.user.livestream;
+        const isLive = !(stream == null);
+
+        if (!wasLive[guildId][username] && isLive) {
+          newAlertOrExistingOne(stream);
+        } else if (wasLive[guildId][username] && !isLive) {
+          streamerGoOffline();
+        }
+      })
+      .catch((err) => console.log(err));
+  };
+
+  /**
    * Process messages from the chat websocket
    *
-   * @param {*} msg
+   * @param {*} rawMsg
    */
-  ws.onmessage = (msg) => {
-    msg = JSON.parse(msg.data);
+  ws.onmessage = (rawMsg) => {
+    const msg = JSON.parse(rawMsg.data);
 
-    if (msg.type == "connection_ack") {
+    if (msg.type === "connection_ack") {
       console.log(
         "[WebSocket]",
         `${guildName} - Connected to chat websocket of ${displayname}`
       );
-    } else if (msg.type == "ka") {
+    } else if (msg.type === "ka") {
       // The server sends a "ka" message every 25 seconds
       // https://docs.dlive.tv/api/api/subscription-web-socket
       clearTimeout(ws.pingTimeout);
@@ -466,19 +465,19 @@ const createChatWebSocket = (
       // the "ka" message 2mins after the last one
       ws.pingTimeout = setTimeout(() => {
         ws.terminate();
-        let newWs = createChatWebSocket(displayname, guildId, channelId);
+        const newWs = createChatWebSocket(displayname, guildId, channelId);
         websockets[guildId].push(newWs);
         console.log(
           "[WebSocket]",
           `${guildName} - Restarting chat websocket of ${displayname}`
         );
       }, timeoutDelay * 1000);
-    } else if (msg.type != "ka") {
-      [msg] = msg.payload.data.streamMessageReceived;
+    } else if (msg.type !== "ka") {
+      const [innerMsg] = msg.payload.data.streamMessageReceived;
 
-      if (msg.type == "Live") {
+      if (innerMsg.type === "Live") {
         streamerGoLive();
-      } else if (msg.type == "Offline") {
+      } else if (innerMsg.type === "Offline") {
         if (wasLive[guildId][displayname]) {
           streamerGoOffline();
         }

@@ -2,7 +2,7 @@ const { createMessageOptions } = require("../helpers/message");
 const { getUsername } = require("../helpers/request");
 
 const commandData = {
-  name: "get_username",
+  name: "getUsername",
   description: "Trouver l'username d'une personne",
   options: [
     {
@@ -16,12 +16,12 @@ const commandData = {
 };
 
 const func = async ({ interaction, args }) => {
-  const displayname = args.displayname;
+  const { displayname } = args;
 
   getUsername(displayname)
     .then((response) => {
       if (response.userByDisplayName) {
-        const username = response.userByDisplayName.username;
+        const { username } = response.userByDisplayName;
         interaction.reply(
           createMessageOptions(`L'username de ${displayname} est:\n${username}`)
         );
@@ -36,9 +36,9 @@ const func = async ({ interaction, args }) => {
     .catch((error) => console.log(error));
 };
 
-const get_username = {
+const getUsernameCmd = {
   commandData,
   func,
 };
 
-module.exports = get_username;
+module.exports = getUsernameCmd;

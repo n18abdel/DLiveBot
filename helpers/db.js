@@ -20,42 +20,10 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
+const moment = require("moment-timezone");
 const settingsDefault = require("../settings");
 
-const moment = require("moment-timezone");
 const timezone = "Europe/Paris";
-
-/**
- * Retrieve the previous state of the bot from Cloud Firestore database
- *
- * @param {object} settings
- */
-const parseDatabase = async (settings) => {
-  wasLive = await db.collection("dlivebot").doc("wasLive").get();
-  wasLive = wasLive.data();
-  alertChannels = await db.collection("dlivebot").doc("alertChannels").get();
-  alertChannels = alertChannels.data();
-  alertHistory = await db.collection("dlivebot").doc("alertHistory").get();
-  alertHistory = alertHistory.data();
-  lastStreams = await db.collection("dlivebot").doc("lastStreams").get();
-  lastStreams = lastStreams.data();
-  settings = await db.collection("dlivebot").doc("settings").get();
-  settings = settings.data();
-  if (
-    wasLive == null ||
-    alertChannels == null ||
-    alertHistory == null ||
-    lastStreams == null ||
-    settings == null ||
-    !Object.keys(settingsDefault).every((element) =>
-      Object.keys(settings).includes(element)
-    )
-  ) {
-    await updateDatabase({}, {}, {}, {}, settingsDefault);
-    await parseDatabase(settings);
-  }
-  return { wasLive, alertChannels, alertHistory, lastStreams, settings };
-};
 
 /**
  * Update the Cloud Firestore database with the current state of the bot
@@ -81,11 +49,44 @@ const updateDatabase = async (
 };
 
 /**
+ * Retrieve the previous state of the bot from Cloud Firestore database
+ */
+const parseDatabase = async () => {
+  let wasLive = await db.collection("dlivebot").doc("wasLive").get();
+  wasLive = wasLive.data();
+  let alertChannels = await db
+    .collection("dlivebot")
+    .doc("alertChannels")
+    .get();
+  alertChannels = alertChannels.data();
+  let alertHistory = await db.collection("dlivebot").doc("alertHistory").get();
+  alertHistory = alertHistory.data();
+  let lastStreams = await db.collection("dlivebot").doc("lastStreams").get();
+  lastStreams = lastStreams.data();
+  let settings = await db.collection("dlivebot").doc("settings").get();
+  settings = settings.data();
+  if (
+    wasLive == null ||
+    alertChannels == null ||
+    alertHistory == null ||
+    lastStreams == null ||
+    settings == null ||
+    !Object.keys(settingsDefault).every((element) =>
+      Object.keys(settings).includes(element)
+    )
+  ) {
+    await updateDatabase({}, {}, {}, {}, settingsDefault);
+    await parseDatabase(settings);
+  }
+  return { wasLive, alertChannels, alertHistory, lastStreams, settings };
+};
+
+/**
  * Log the last loginTime
  *
  * @param {Number} maxLoginsToLog
  */
-const loginTime = (maxLoginsToLog = 10) => {
+const logLoginTime = (maxLoginsToLog = 10) => {
   const loginTime = moment().tz(timezone);
   const loginTimeRef = db.collection("dlivebot").doc("loginTime");
   loginTimeRef.get().then((docSnapshot) => {
@@ -109,5 +110,5 @@ const loginTime = (maxLoginsToLog = 10) => {
 module.exports = {
   parseDatabase,
   updateDatabase,
-  loginTime,
+  logLoginTime,
 };
