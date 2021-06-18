@@ -191,6 +191,7 @@ const sendAlertMessage = (
 const editAlertMessage = (
   {
     displayname,
+    username,
     stream,
     channelId,
     channelName,
@@ -247,8 +248,8 @@ const editAlertMessage = (
       );
       if (permlink) {
         // when the streamer goes offline
-        wasLive[guildId][displayname] = false;
-        lastStreams[guildId][displayname]["finishedAt"] = finishedAt;
+        wasLive[guildId][username] = false;
+        lastStreams[guildId][username]["finishedAt"] = finishedAt;
         await updateDatabase(
           wasLive,
           alertChannels,
@@ -258,8 +259,8 @@ const editAlertMessage = (
         );
       } else {
         // the stream is still up
-        if (stream.title != lastStreams[guildId][displayname]) {
-          lastStreams[guildId][displayname].title = stream.title;
+        if (stream.title != lastStreams[guildId][username]) {
+          lastStreams[guildId][username].title = stream.title;
           await updateDatabase(
             wasLive,
             alertChannels,
