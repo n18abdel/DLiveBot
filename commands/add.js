@@ -3,6 +3,7 @@ const { createMessageOptions } = require("../helpers/message");
 const {
   createChatWebSocket,
   createChestWebSocket,
+  getUsername,
 } = require("../helpers/request");
 
 const commandData = {
@@ -29,7 +30,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
     websockets,
   } = botState;
 
-  const displayname = args.displayname;
+  const { displayname } = args;
 
   if (!(guildId in wasLive)) {
     websockets[guildId] = [];
@@ -45,34 +46,57 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
       settings
     );
   }
-  if (displayname in wasLive[guildId]) {
-    interaction
-      .reply(createMessageOptions(`Une alerte existe déjà pour ${displayname}`))
-      .catch((error) => console.log(error));
-  } else {
-    wasLive[guildId][displayname] = false;
-    await updateDatabase(
-      wasLive,
-      alertChannels,
-      alertHistory,
-      lastStreams,
-      settings
-    );
 
-    let ws = createChatWebSocket(displayname, guildId, channelId, botState);
-    let cs = createChestWebSocket(displayname, guildId, channelId, botState);
-    websockets[guildId].push(ws);
-    websockets[guildId].push(cs);
+  getUsername(displayname)
+    .then(async (username) => {
+      if (username) {
+        if (username in wasLive[guildId]) {
+          interaction.reply(
+            createMessageOptions(`Une alerte existe déjà pour ${displayname}`)
+          );
+        } else {
+          wasLive[guildId][username] = false;
+          await updateDatabase(
+            wasLive,
+            alertChannels,
+            alertHistory,
+            lastStreams,
+            settings
+          );
 
-    interaction
-      .reply(createMessageOptions(`Alerte paramétrée pour ${displayname}`))
-      .catch((error) => console.log(error));
-  }
+          const ws = createChatWebSocket(
+            username,
+            displayname,
+            guildId,
+            channelId,
+            botState
+          );
+          const cs = createChestWebSocket(
+            username,
+            displayname,
+            guildId,
+            channelId,
+            botState
+          );
+          websockets[guildId].push(ws);
+          websockets[guildId].push(cs);
+
+          interaction.reply(
+            createMessageOptions(`Alerte paramétrée pour ${displayname}`)
+          );
+        }
+      } else {
+        interaction.reply(
+          createMessageOptions(
+            `Aucun streamer avec le nom ${displayname} a été trouvé\nVérifiez votre saisie`
+          )
+        );
+      }
+    })
+    .catch((error) => console.log(error));
 };
 
-const add = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = add;

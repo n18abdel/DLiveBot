@@ -16,12 +16,11 @@ const commandData = {
 };
 
 const func = async ({ interaction, args }) => {
-  const displayname = args.displayname;
+  const { displayname } = args;
 
   getUsername(displayname)
-    .then((response) => {
-      if (response.userByDisplayName) {
-        const username = response.userByDisplayName.username;
+    .then((username) => {
+      if (username) {
         interaction.reply(
           createMessageOptions(`L'username de ${displayname} est:\n${username}`)
         );
@@ -36,9 +35,7 @@ const func = async ({ interaction, args }) => {
     .catch((error) => console.log(error));
 };
 
-const get_username = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = get_username;
