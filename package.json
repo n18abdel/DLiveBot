@@ -1,0 +1,22 @@
+{
+  "name": "dlivebotV3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^13.0.0-dev.02693bc02f45980d8165820a103220f0027b96b7",
+    "express": "^4.17.1",
+    "firebase-admin": "^9.9.0",
+    "moment-timezone": "^0.5.33",
+    "ws": "^7.4.6"
+  },
+  "devDependencies": {
+    "eslint": "^7.28.0"
+  }
+}
