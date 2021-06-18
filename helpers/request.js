@@ -263,6 +263,7 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
  * Create a websocket to listen to the chat of the given streamer
  *
  * @param {string} username
+ * @param {string} displayname
  * @param {string} guildId
  * @param {string} channelId
  * @param {object} botState
@@ -316,55 +317,53 @@ const createChatWebSocket = (
    * @param {object} stream
    */
   const newAlertOrExistingOne = (stream) => {
-    getDisplayname(username).then((displayname) => {
-      if (
-        lastStreams[guildId][username] &&
-        (stream.permlink === lastStreams[guildId][username].permlink ||
-          sameTitleWithinDelay(stream))
-      ) {
-        /**
-         * there was a bug the stream went off and back up
-         * or
-         * there was a stream with the same title not "so long ago"
-         */
-        const existingMsgId = alertHistory[guildId][username];
+    if (
+      lastStreams[guildId][username] &&
+      (stream.permlink === lastStreams[guildId][username].permlink ||
+        sameTitleWithinDelay(stream))
+    ) {
+      /**
+       * there was a bug the stream went off and back up
+       * or
+       * there was a stream with the same title not "so long ago"
+       */
+      const existingMsgId = alertHistory[guildId][username];
 
-        editAlertMessage(
-          {
-            displayname,
-            username,
-            stream,
-            channelId,
-            channelName,
-            guildId,
-            guildName,
-            existingMsgId,
-            online: true,
-          },
-          botState
-        ).then(async () => {
-          wasLive[guildId][username] = true;
-          await updateDatabase(
-            wasLive,
-            alertChannels,
-            alertHistory,
-            lastStreams,
-            settings
-          );
-        });
-      } else {
-        sendAlertMessage(
+      editAlertMessage(
+        {
           displayname,
           username,
           stream,
-          guildId,
           channelId,
           channelName,
+          guildId,
           guildName,
-          botState
+          existingMsgId,
+          online: true,
+        },
+        botState
+      ).then(async () => {
+        wasLive[guildId][username] = true;
+        await updateDatabase(
+          wasLive,
+          alertChannels,
+          alertHistory,
+          lastStreams,
+          settings
         );
-      }
-    });
+      });
+    } else {
+      sendAlertMessage(
+        displayname,
+        username,
+        stream,
+        guildId,
+        channelId,
+        channelName,
+        guildName,
+        botState
+      );
+    }
   };
 
   let goLiveLoop = 0;
@@ -396,10 +395,9 @@ const createChatWebSocket = (
           lastStreamedAt: finishedAt,
           offlineImage,
           livestream: stream,
-          displayname,
         } = user;
-        const existingMsgId = alertHistory[guildId][displayname];
-        const { permlink } = lastStreams[guildId][displayname];
+        const existingMsgId = alertHistory[guildId][username];
+        const { permlink } = lastStreams[guildId][username];
 
         editAlertMessage(
           {
@@ -467,7 +465,12 @@ const createChatWebSocket = (
       // the "ka" message 2mins after the last one
       ws.pingTimeout = setTimeout(() => {
         ws.terminate();
-        const newWs = createChatWebSocket(displayname, guildId, channelId);
+        const newWs = createChatWebSocket(
+          username,
+          displayname,
+          guildId,
+          channelId
+        );
         websockets[guildId].push(newWs);
         console.log(
           "[WebSocket]",
@@ -480,7 +483,7 @@ const createChatWebSocket = (
       if (innerMsg.type === "Live") {
         streamerGoLive();
       } else if (innerMsg.type === "Offline") {
-        if (wasLive[guildId][displayname]) {
+        if (wasLive[guildId][username]) {
           streamerGoOffline();
         }
       }
