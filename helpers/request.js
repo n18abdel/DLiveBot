@@ -29,12 +29,12 @@ const requestOptions = {
  */
 const request = (data) =>
   new Promise((resolve, reject) => {
-    const postData = typeof data === "object" ? JSON.stringify(data) : data;
+    const postData = JSON.stringify(data);
     const req = https.request(requestOptions, (res) => {
       res.setEncoding("utf-8");
       res.on("data", (responseText) => {
         const response = JSON.parse(responseText).data;
-        resolve(response);
+        resolve(response[data.operationName]);
       });
       res.on("error", (error) => reject(error));
     });
@@ -49,17 +49,17 @@ const request = (data) =>
  */
 const getUsername = (displayname) =>
   request({
-    operationName: "LivestreamPage",
+    operationName: "userByDisplayName",
     query: `query LivestreamPage($displayname: String!) {
-       userByDisplayName(displayname: $displayname) {
-         username
-         __typename
-       }
-     }`,
+      userByDisplayName(displayname: $displayname) {
+        username
+        __typename
+      }
+    }`,
     variables: {
       displayname,
     },
-  });
+  }).then((user) => (user ? user.username : null));
 
 /**
  * Retrieve the DLive displayname (different than username)
@@ -68,17 +68,17 @@ const getUsername = (displayname) =>
  */
 const getDisplayname = (username) =>
   request({
-    operationName: "User",
+    operationName: "user",
     query: `query User($username: String!) {
-   user(displayname: $username) {
-     displayname
-     __typename
-   }
- }`,
+      user(displayname: $username) {
+        displayname
+        __typename
+      }
+    }`,
     variables: {
       username,
     },
-  });
+  }).then((user) => user.displayname);
 
 /**
  * Retrieve current stream info
@@ -87,29 +87,29 @@ const getDisplayname = (username) =>
  */
 const getStreamInfo = (username) =>
   request({
-    operationName: "LivestreamPage",
+    operationName: "user",
     query: `query LivestreamPage($username: String!) {
-       user(username: $username) {
-         livestream {
-           title
-           thumbnailUrl
-           watchingCount
-           createdAt
-           category {
-             title
-             imgUrl
-             __typename
-           }
-           totalReward
-           permlink
-           __typename
-         }
-         lastStreamedAt
-         offlineImage
-         displayname
-         __typename
-       }
-     }`,
+      user(username: $username) {
+        livestream {
+          title
+          thumbnailUrl
+          watchingCount
+          createdAt
+          category {
+            title
+            imgUrl
+            __typename
+          }
+          totalReward
+          permlink
+          __typename
+        }
+        lastStreamedAt
+        offlineImage
+        displayname
+        __typename
+      }
+    }`,
     variables: {
       username,
     },
@@ -161,8 +161,7 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
   cs.onopen = () => {
     cs.send('{"type":"connection_init","payload":{}}');
 
-    getUsername(displayname).then((response) => {
-      const { username } = response.userByDisplayName;
+    getUsername(displayname).then((username) => {
       const joinmsg = createJoinMsg(username, { chest: true });
       cs.send(JSON.stringify(joinmsg));
     });
@@ -173,8 +172,8 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
     const roundedValue = Math.round(value * 100) / 100;
 
     getStreamInfo(displayname)
-      .then((response) => {
-        const stream = response.userByDisplayName.livestream;
+      .then((user) => {
+        const { stream } = user.stream;
         if (wasLive[guildId][displayname]) {
           const existingMsgId = alertHistory[guildId][displayname];
 
@@ -317,8 +316,7 @@ const createChatWebSocket = (
    * @param {object} stream
    */
   const newAlertOrExistingOne = (stream) => {
-    getDisplayname(username).then((response) => {
-      const { displayname } = response.user;
+    getDisplayname(username).then((displayname) => {
       if (
         lastStreams[guildId][username] &&
         (stream.permlink === lastStreams[guildId][username].permlink ||
@@ -372,8 +370,8 @@ const createChatWebSocket = (
   let goLiveLoop = 0;
   const streamerGoLive = () =>
     getStreamInfo(username)
-      .then((response) => {
-        const stream = response.user.livestream;
+      .then((user) => {
+        const { stream } = user;
         if (!stream && goLiveLoop < 15) {
           /**
            * stream shouldn't be null as the streamer went live
@@ -393,13 +391,13 @@ const createChatWebSocket = (
 
   const streamerGoOffline = () =>
     getStreamInfo(username)
-      .then((response) => {
+      .then((user) => {
         const {
           lastStreamedAt: finishedAt,
           offlineImage,
           livestream: stream,
           displayname,
-        } = response.user;
+        } = user;
         const existingMsgId = alertHistory[guildId][displayname];
         const { permlink } = lastStreams[guildId][displayname];
 
@@ -434,8 +432,8 @@ const createChatWebSocket = (
     ws.send(JSON.stringify(joinmsg));
 
     getStreamInfo(username)
-      .then((response) => {
-        const stream = response.user.livestream;
+      .then((user) => {
+        const { stream } = user;
         const isLive = !(stream == null);
 
         if (!wasLive[guildId][username] && isLive) {
