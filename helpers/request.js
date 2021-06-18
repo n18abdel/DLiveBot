@@ -341,53 +341,56 @@ const createChatWebSocket = (
    * @param {object} stream
    */
   const newAlertOrExistingOne = (stream) => {
-    if (
-      lastStreams[guildId][username] &&
-      (stream.permlink == lastStreams[guildId][username].permlink ||
-        sameTitleWithinDelay(stream))
-    ) {
-      /**
-       * there was a bug the stream went off and back up
-       * or
-       * there was a stream with the same title not "so long ago"
-       */
-      const existingMsgId = alertHistory[guildId][username];
+    getDisplayname(username).then((response) => {
+      const displayname = response.user.displayname;
+      if (
+        lastStreams[guildId][username] &&
+        (stream.permlink == lastStreams[guildId][username].permlink ||
+          sameTitleWithinDelay(stream))
+      ) {
+        /**
+         * there was a bug the stream went off and back up
+         * or
+         * there was a stream with the same title not "so long ago"
+         */
+        const existingMsgId = alertHistory[guildId][username];
 
-      editAlertMessage(
-        {
+        editAlertMessage(
+          {
+            displayname,
+            username,
+            stream,
+            channelId,
+            channelName,
+            guildId,
+            guildName,
+            existingMsgId,
+            online: true,
+          },
+          botState
+        ).then(async () => {
+          wasLive[guildId][username] = true;
+          -(await updateDatabase(
+            wasLive,
+            alertChannels,
+            alertHistory,
+            lastStreams,
+            settings
+          ));
+        });
+      } else {
+        sendAlertMessage(
           displayname,
           username,
           stream,
+          guildId,
           channelId,
           channelName,
-          guildId,
           guildName,
-          existingMsgId,
-          online: true,
-        },
-        botState
-      ).then(async () => {
-        wasLive[guildId][username] = true;
-        -(await updateDatabase(
-          wasLive,
-          alertChannels,
-          alertHistory,
-          lastStreams,
-          settings
-        ));
-      });
-    } else {
-      sendAlertMessage(
-        displayname,
-        username,
-        stream,
-        guildId,
-        channelId,
-        channelName,
-        guildName,
-        botState
-      );
-    }
+          botState
+        );
+      }
+    });
   };
 
   let goLiveLoop = 0;
