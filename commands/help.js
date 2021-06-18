@@ -36,9 +36,7 @@ const func = async ({ interaction, botState }) => {
   interaction.reply(message).catch((error) => console.log(error));
 };
 
-const help = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = help;

@@ -21,9 +21,7 @@ const func = async ({ interaction, botState }) => {
     .catch((error) => console.log(error));
 };
 
-const getDelay = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = getDelay;
