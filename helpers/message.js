@@ -5,6 +5,15 @@ const { updateDatabase } = require("./db");
 
 // ================= ALERT MESSAGE HELPERS ===================
 /**
+ * Return only the properties title and permlink
+ * from the input stream object
+ *
+ * @param {object} stream
+ * @return {object}
+ */
+const selectTitlePermlink = ({ title, permlink }) => ({ title, permlink });
+
+/**
  * Process input message, and retrieve custom emojis,
  * and replace displayname parameter with value
  *
@@ -17,27 +26,27 @@ const { updateDatabase } = require("./db");
 const processMessage = (message, guildId, displayname, { client }) => {
   let processedMessage = message;
   processedMessage = processedMessage.replace(/<displayname>/g, displayname);
-  const emojis = message.matchAll(/:(.+?):/g);
+  const emojis = Array.from(message.matchAll(/:(.+?):/g));
 
-  retrievedEmojis = {};
-  for (let emoji of emojis) {
+  const retrievedEmojis = {};
+  emojis.forEach((emoji) => {
     const emojiName = emoji[1];
     if (!retrievedEmojis[emojiName]) {
       const retrievedEmoji = client.guilds.cache
         .get(guildId)
-        .emojis.cache.find((emoji) => emoji.name == emojiName);
+        .emojis.cache.find((guildEmoji) => guildEmoji.name === emojiName);
 
       if (retrievedEmoji) {
         retrievedEmojis[emojiName] = retrievedEmoji;
       }
     }
-  }
-  for (let emoji in retrievedEmojis) {
+  });
+
+  Object.keys(retrievedEmojis).forEach((emoji) => {
     const toReplace = `:${emoji}:`;
     const regex = new RegExp(toReplace, "g");
     processedMessage = processedMessage.replace(regex, retrievedEmojis[emoji]);
-  }
-
+  });
   return processedMessage;
 };
 /**
@@ -51,7 +60,7 @@ const getAlertMessageOptions = (
   { displayname, stream, online, chestValue, permlink, guildId, offlineImage },
   botState
 ) => {
-  const { settings, client } = botState;
+  const { settings } = botState;
   const msgEmbed = new Discord.MessageEmbed()
     .setColor(settings.color)
     .setFooter(processMessage(settings.footer, guildId, displayname, botState));
@@ -94,7 +103,7 @@ const getAlertMessageOptions = (
         `https://dlive.tv/${displayname}?ref=${settings.referralUsername}`
       );
     if (chestValue) {
-      const chestNames = settings.chestNames;
+      const { chestNames } = settings;
       const ind = Math.floor(Math.random() * chestNames.length);
       msgEmbed.addField(chestNames[ind], `${chestValue} :lemon:`, true);
     }
@@ -117,6 +126,7 @@ const getAlertMessageOptions = (
  * Send alert message to the given channel
  *
  * @param {string} displayname
+ * @param {string} username
  * @param {string} stream
  * @param {string} guildId
  * @param {string} channelId
@@ -126,6 +136,7 @@ const getAlertMessageOptions = (
  */
 const sendAlertMessage = (
   displayname,
+  username,
   stream,
   guildId,
   channelId,
@@ -168,9 +179,9 @@ const sendAlertMessage = (
         `Sent announce msg to #${channelName} on ${guildName} for ${displayname}`
       );
 
-      wasLive[guildId][displayname] = true;
-      alertHistory[guildId][displayname] = message.id;
-      lastStreams[guildId][displayname] = selectTitlePermlink(stream);
+      wasLive[guildId][username] = true;
+      alertHistory[guildId][username] = message.id;
+      lastStreams[guildId][username] = selectTitlePermlink(stream);
       await updateDatabase(
         wasLive,
         alertChannels,
@@ -191,6 +202,7 @@ const sendAlertMessage = (
 const editAlertMessage = (
   {
     displayname,
+    username,
     stream,
     channelId,
     channelName,
@@ -240,15 +252,15 @@ const editAlertMessage = (
         ],
       });
     })
-    .then(async (message) => {
+    .then(async () => {
       console.log(
         "[Discord]",
         `Edited announce msg to #${channelName} on ${guildName} for ${displayname}`
       );
       if (permlink) {
         // when the streamer goes offline
-        wasLive[guildId][displayname] = false;
-        lastStreams[guildId][displayname]["finishedAt"] = finishedAt;
+        wasLive[guildId][username] = false;
+        lastStreams[guildId][username].finishedAt = finishedAt;
         await updateDatabase(
           wasLive,
           alertChannels,
@@ -256,38 +268,26 @@ const editAlertMessage = (
           lastStreams,
           settings
         );
-      } else {
+      } else if (stream.title !== lastStreams[guildId][username]) {
         // the stream is still up
-        if (stream.title != lastStreams[guildId][displayname]) {
-          lastStreams[guildId][displayname].title = stream.title;
-          await updateDatabase(
-            wasLive,
-            alertChannels,
-            alertHistory,
-            lastStreams,
-            settings
-          );
-        }
+        lastStreams[guildId][username].title = stream.title;
+        await updateDatabase(
+          wasLive,
+          alertChannels,
+          alertHistory,
+          lastStreams,
+          settings
+        );
       }
     })
     .catch((error) => console.log(error));
 };
 
-/**
- * Return only the properties title and permlink
- * from the input stream object
- *
- * @param {object} stream
- * @return {object}
- */
-const selectTitlePermlink = ({ title, permlink }) => ({ title, permlink });
-
-const createMessageOptions = (message, embed) => {
+const createMessageOptions = (input, { embed = false } = {}) => {
   if (embed) {
-    return { embeds: [message], ephemeral: true };
-  } else {
-    return { content: message, ephemeral: true };
+    return { embeds: [input], ephemeral: true };
   }
+  return { content: input, ephemeral: true };
 };
 
 module.exports = { sendAlertMessage, editAlertMessage, createMessageOptions };

@@ -36,9 +36,7 @@ const func = async ({ interaction, guildId, botState }) => {
     .catch((error) => console.log(error));
 };
 
-const clear = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = clear;

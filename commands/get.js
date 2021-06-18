@@ -1,4 +1,5 @@
 const { createMessageOptions } = require("../helpers/message");
+const { getDisplayname } = require("../helpers/request");
 
 const commandData = {
   name: "get",
@@ -9,26 +10,28 @@ const commandData = {
 const func = async ({ interaction, guildId, botState }) => {
   const { wasLive } = botState;
 
-  if (wasLive[guildId] == null || Object.keys(wasLive[guildId]).length == 0) {
+  if (!wasLive[guildId] || Object.keys(wasLive[guildId]).length === 0) {
     interaction
       .reply(createMessageOptions("Aucune alerte paramétrée"))
       .catch((error) => console.log(error));
   } else {
-    interaction
-      .reply(
-        createMessageOptions(
-          `Alerte paramétrée pour le(s) streamer(s):\n${Object.keys(
-            wasLive[guildId]
-          ).join("\n")}`
-        )
-      )
+    Promise.all(
+      Object.keys(wasLive[guildId]).map((username) => getDisplayname(username))
+    )
+      .then((displaynames) => {
+        interaction.reply(
+          createMessageOptions(
+            `Alerte paramétrée pour le(s) streamer(s):\n${displaynames.join(
+              "\n"
+            )}`
+          )
+        );
+      })
       .catch((error) => console.log(error));
   }
 };
 
-const get = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = get;

@@ -1,4 +1,5 @@
 const express = require("express");
+
 const app = express();
 const port = 3000;
 
@@ -8,35 +9,33 @@ app.listen(port);
 
 // ================= START BOT CODE ===================
 const Discord = require("discord.js");
+
 const client = new Discord.Client({
   intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES],
 });
 
+const glob = require("glob");
 let settings = require("./settings");
-const { parseDatabase, updateDatabase, loginTime } = require("./helpers/db");
+const { parseDatabase, updateDatabase, logLoginTime } = require("./helpers/db");
 const {
   createChatWebSocket,
   createChestWebSocket,
+  getDisplayname,
 } = require("./helpers/request");
 
-const fs = require("fs");
-const commandsList = fs.readdirSync("./commands"); // return an array of all the files and folders inside the commands folder
-client.commands = {}; // initiate value for the command list of client
-for (item of commandsList) {
-  if (item.match(/\.js$/)) {
-    // only take js files
-    const commandName = item.slice(0, -3);
-    client.commands[commandName] = require(`./commands/${item}`); // and put the require inside the client.commands object
-  }
-}
+client.commands = {};
+glob.sync("./commands/*.js").forEach((commandFile) => {
+  const commandName = commandFile.match(/\.\/commands\/(.*)\.js/)[1];
+  client.commands[commandName] = require(commandFile);
+});
 
 // ================= BOT STATE VARIABLES ===================
 /** {guildId: [websocket]}
  * Websockets of added streamers
  */
-let websockets = {};
+const websockets = {};
 
-/** {guildId: {streamerDisplayname: boolean}}
+/** {guildId: {streamerUsername: boolean}}
  * Previous streaming state of added streamers
  */
 let wasLive = {};
@@ -46,13 +45,13 @@ let wasLive = {};
  */
 let alertChannels = {};
 
-/** {guildId: {streamerDisplayname: messageId}}
+/** {guildId: {streamerUsername: messageId}}
  * History of the latest sent alert messages
  * to be able to update them
  */
 let alertHistory = {};
 
-/** {guildId: {streamerDisplayname: stream}}
+/** {guildId: {streamerUsername: stream}}
  * Latest streams with sent alert
  */
 let lastStreams = {};
@@ -66,65 +65,6 @@ const getBotState = () => ({
   alertChannels,
   websockets,
 });
-
-// ================= DISCORD BOT ===================
-client.on("ready", async () => {
-  // Initialize the bot
-  console.log("[Discord]", `Logged in as ${client.user.tag}!`);
-
-  // Log last login time
-  loginTime();
-
-  ({ wasLive, alertChannels, alertHistory, lastStreams, settings } =
-    await parseDatabase(settings));
-  /**
-   * Retrieve previously set up alerts
-   * and recreate the associated websockets
-   * */
-  for (let guildId in wasLive) {
-    if (client.guilds.cache.get(guildId)) {
-      websockets[guildId] = [];
-      for (let displayname in wasLive[guildId]) {
-        let channelId = alertChannels[guildId];
-        let ws = createChatWebSocket(
-          displayname,
-          guildId,
-          channelId,
-          getBotState()
-        );
-        let cs = createChestWebSocket(
-          displayname,
-          guildId,
-          channelId,
-          getBotState()
-        );
-        websockets[guildId].push(ws);
-        websockets[guildId].push(cs);
-      }
-    } else {
-      await clear(guildId);
-    }
-  }
-  /* DEBUG to check bot permissions
-  const guildIdToCheck = "<toFill>"
-  const channelIdToCheck = "<toFill>"
-  console.log(client.guilds.cache.get(guildIdToCheck).me.permissions.toArray())
-  console.log(client.channels.cache.get(channelIdToCheck).permissionsFor(client.user).toArray())
-  */
-});
-
-const getOptions = (interaction) => {
-  const options = interaction.options;
-  const args = {};
-
-  if (options) {
-    for (const option of options.values()) {
-      const { name, value } = option;
-      args[name] = value;
-    }
-  }
-  return args;
-};
 
 const clear = async (guildId) => {
   if (websockets[guildId]) {
@@ -174,6 +114,73 @@ const upsertCommands = async (guild) => {
   });
 };
 
+// ================= DISCORD BOT ===================
+client.on("ready", async () => {
+  // Initialize the bot
+  console.log("[Discord]", `Logged in as ${client.user.tag}!`);
+
+  // Log last login time
+  logLoginTime();
+
+  ({ wasLive, alertChannels, alertHistory, lastStreams, settings } =
+    await parseDatabase());
+  /**
+   * Retrieve previously set up alerts
+   * and recreate the associated websockets
+   * */
+  Object.keys(wasLive).forEach(async (guildId) => {
+    if (client.guilds.cache.get(guildId)) {
+      websockets[guildId] = [];
+      Object.keys(wasLive[guildId]).forEach((username) => {
+        const channelId = alertChannels[guildId];
+
+        getDisplayname(username)
+          .then((displayname) => {
+            const ws = createChatWebSocket(
+              username,
+              displayname,
+              guildId,
+              channelId,
+              getBotState()
+            );
+            const cs = createChestWebSocket(
+              username,
+              displayname,
+              guildId,
+              channelId,
+              getBotState()
+            );
+            websockets[guildId].push(ws);
+            websockets[guildId].push(cs);
+          })
+          .catch((error) => console.log(error));
+      });
+    } else {
+      await clear(guildId);
+    }
+  });
+
+  /* DEBUG to check bot permissions
+  const guildIdToCheck = "<toFill>"
+  const channelIdToCheck = "<toFill>"
+  console.log(client.guilds.cache.get(guildIdToCheck).me.permissions.toArray())
+  console.log(client.channels.cache.get(channelIdToCheck).permissionsFor(client.user).toArray())
+  */
+});
+
+const getOptions = (interaction) => {
+  const { options } = interaction;
+  const args = {};
+
+  if (options) {
+    Array.from(options.values()).forEach((option) => {
+      const { name, value } = option;
+      args[name] = value;
+    });
+  }
+  return args;
+};
+
 client.once("ready", () => {
   client.guilds.cache.forEach(async (guild) => {
     // clear old commands
@@ -209,12 +216,12 @@ client.on("interaction", async (interaction) => {
     );
     const isAlertChannel = interaction.channel.name.includes("alerte");
     if (interaction.isCommand() && isAdmin && isAlertChannel) {
-      const guildId = interaction.guild.id;
-      const channelId = interaction.channel.id;
-      const args = getOptions(interaction);
-      const botState = getBotState();
-
       if (interaction.commandName in client.commands) {
+        const guildId = interaction.guild.id;
+        const channelId = interaction.channel.id;
+        const args = getOptions(interaction);
+        const botState = getBotState();
+
         client.commands[interaction.commandName].func({
           interaction,
           guildId,
