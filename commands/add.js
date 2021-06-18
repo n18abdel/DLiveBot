@@ -68,12 +68,14 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
 
           const ws = createChatWebSocket(
             username,
+            displayname,
             guildId,
             channelId,
             botState
           );
           const cs = createChestWebSocket(
             username,
+            displayname,
             guildId,
             channelId,
             botState
