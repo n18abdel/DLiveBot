@@ -297,14 +297,14 @@ const createChatWebSocket = (
    * @return {boolean}
    */
   const sameTitleWithinDelay = (stream) =>
-    stream.title === lastStreams[guildId][displayname].title &&
+    stream.title === lastStreams[guildId][username].title &&
     moment
       .duration(
         moment
           .unix(Number(stream.createdAt) / 1000)
           .diff(
             moment.unix(
-              Number(lastStreams[guildId][displayname].finishedAt) / 1000
+              Number(lastStreams[guildId][username].finishedAt) / 1000
             )
           )
       )
