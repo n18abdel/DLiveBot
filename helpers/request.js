@@ -106,6 +106,7 @@ const getStreamInfo = (username) =>
          }
          lastStreamedAt
          offlineImage
+         displayname
          __typename
        }
      }`,
