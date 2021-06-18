@@ -40,7 +40,7 @@ const request = (data) =>
     });
     req.write(postData);
     req.end();
-  }).catch((error) => console.log(error));
+  });
 
 /**
  * Retrieve the DLive username (different than displayname)
