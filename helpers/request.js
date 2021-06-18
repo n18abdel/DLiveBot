@@ -142,13 +142,20 @@ const createJoinMsg = (username, { chest = false }) => {
 /**
  * Create a websocket to listen to the chest of the given streamer
  *
+ * @param {string} username
  * @param {string} displayname
  * @param {string} guildId
  * @param {string} channelId
  * @param {object} botState
  * @return {WebSocket}
  */
-const createChestWebSocket = (displayname, guildId, channelId, botState) => {
+const createChestWebSocket = (
+  username,
+  displayname,
+  guildId,
+  channelId,
+  botState
+) => {
   const { client, wasLive, alertHistory, websockets } = botState;
   const guildName = client.guilds.cache.get(guildId).name;
   const channelName = client.channels.cache.get(channelId).name;
@@ -161,25 +168,24 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
   cs.onopen = () => {
     cs.send('{"type":"connection_init","payload":{}}');
 
-    getUsername(displayname).then((username) => {
-      const joinmsg = createJoinMsg(username, { chest: true });
-      cs.send(JSON.stringify(joinmsg));
-    });
+    const joinmsg = createJoinMsg(username, { chest: true });
+    cs.send(JSON.stringify(joinmsg));
   };
 
   const updateChestValue = (msg) => {
     const value = msg.value / 100000;
     const roundedValue = Math.round(value * 100) / 100;
 
-    getStreamInfo(displayname)
+    getStreamInfo(username)
       .then((user) => {
         const { stream } = user.stream;
-        if (wasLive[guildId][displayname]) {
-          const existingMsgId = alertHistory[guildId][displayname];
+        if (wasLive[guildId][username]) {
+          const existingMsgId = alertHistory[guildId][username];
 
           editAlertMessage(
             {
               displayname,
+              username,
               stream,
               channelId,
               channelName,
@@ -198,6 +204,7 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
 
             sendAlertMessage(
               displayname,
+              username,
               stream,
               guildId,
               channelId,
@@ -233,7 +240,12 @@ const createChestWebSocket = (displayname, guildId, channelId, botState) => {
       // the "ka" message 2mins after the last one
       cs.pingTimeout = setTimeout(() => {
         cs.terminate();
-        const newCs = createChestWebSocket(displayname, guildId, channelId);
+        const newCs = createChestWebSocket(
+          username,
+          displayname,
+          guildId,
+          channelId
+        );
         websockets[guildId].push(newCs);
         console.log(
           "[WebSocket]",
