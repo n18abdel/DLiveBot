@@ -194,7 +194,7 @@ const createChestWebSocket = (
               guildName,
               existingMsgId,
               online: true,
-              roundedValue,
+              chestValue: roundedValue,
             },
             botState
           );
