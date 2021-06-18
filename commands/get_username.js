@@ -35,9 +35,7 @@ const func = async ({ interaction, args }) => {
     .catch((error) => console.log(error));
 };
 
-const getUsernameCmd = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = getUsernameCmd;

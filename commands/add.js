@@ -96,9 +96,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
     .catch((error) => console.log(error));
 };
 
-const add = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = add;

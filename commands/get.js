@@ -31,9 +31,7 @@ const func = async ({ interaction, guildId, botState }) => {
   }
 };
 
-const get = {
+module.exports = {
   commandData,
   func,
 };
-
-module.exports = get;
