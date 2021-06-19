@@ -2,12 +2,9 @@ const { loadCommands, getOptions } = require("../helpers/command");
 
 const funcs = {};
 
-Object.entries(loadCommands({ folder: "settings", subGroup: true })).forEach(
-  ([commandGroup, commands]) => {
-    if (!funcs[commandGroup]) funcs[commandGroup] = {};
-    Object.entries(commands).forEach(([command, path]) => {
-      funcs[commandGroup][command] = require(path);
-    });
+Object.entries(loadCommands({ folder: "alerts" })).forEach(
+  ([command, path]) => {
+    funcs[command] = require(path);
   }
 );
 

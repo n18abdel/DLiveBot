@@ -1,4 +1,24 @@
+const glob = require("glob");
 const Discord = require("discord.js");
+
+const loadCommands = ({ folder, subGroup = false }) => {
+  const container = {};
+  const files = glob.sync(`**/${folder}${subGroup ? "/**" : ""}/*.js`);
+
+  files.forEach((commandFile) => {
+    const commandName = commandFile.match(/.*\/(.*)\.js/)[1];
+    if (subGroup) {
+      const commandGroup = commandFile.match(/.*\/(.*)\/.*\.js/)[1];
+      if (!container[commandGroup]) container[commandGroup] = {};
+      container[commandGroup][
+        commandName
+      ] = `./${folder}/${commandGroup}/${commandName}`;
+    } else {
+      container[commandName] = `./${folder}/${commandName}`;
+    }
+  });
+  return container;
+};
 
 const clearCommands = async (guild, commands) => {
   await guild.commands.fetch().then((existingCommands) =>
@@ -52,4 +72,4 @@ const getOptions = (interaction) => {
   return args;
 };
 
-module.exports = { clearCommands, upsertCommands, getOptions };
+module.exports = { loadCommands, clearCommands, upsertCommands, getOptions };
