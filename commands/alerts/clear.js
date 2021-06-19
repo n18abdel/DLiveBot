@@ -17,6 +17,7 @@ const func = async ({ interaction, guildId, botState }) => {
   delete alertChannels[guildId];
   delete alertHistory[guildId];
   delete lastStreams[guildId];
+  delete settings[guildId];
   await updateDatabase(
     wasLive,
     alertChannels,

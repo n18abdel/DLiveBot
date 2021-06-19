@@ -71,12 +71,15 @@ const parseDatabase = async () => {
     alertHistory == null ||
     lastStreams == null ||
     settings == null ||
-    !Object.keys(settingsDefault).every((element) =>
-      Object.keys(settings).includes(element)
+    Object.values(settings).every(
+      (guildSettings) =>
+        !Object.keys(settingsDefault).every((element) =>
+          Object.keys(guildSettings).includes(element)
+        )
     )
   ) {
-    await updateDatabase({}, {}, {}, {}, settingsDefault);
-    await parseDatabase(settings);
+    await updateDatabase({}, {}, {}, {}, {});
+    await parseDatabase();
   }
   return { wasLive, alertChannels, alertHistory, lastStreams, settings };
 };

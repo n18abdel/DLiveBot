@@ -1,3 +1,4 @@
+const settingsDefault = require("../../settings");
 const { updateDatabase } = require("../../helpers/db");
 const { createMessageOptions } = require("../../helpers/message");
 const {
@@ -24,6 +25,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
     alertHistory[guildId] = {};
     lastStreams[guildId] = {};
     alertChannels[guildId] = channelId;
+    settings[guildId] = settingsDefault;
     await updateDatabase(
       wasLive,
       alertChannels,

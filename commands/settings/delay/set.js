@@ -1,14 +1,16 @@
+const settingsDefault = require("../../../settings");
 const { updateDatabase } = require("../../../helpers/db");
 const { createMessageOptions } = require("../../../helpers/message");
 const { delayExplainer } = require("../../../constants");
 
-const func = async ({ interaction, args, botState }) => {
+const func = async ({ interaction, guildId, args, botState }) => {
   const { settings, wasLive, alertHistory, lastStreams, alertChannels } =
     botState;
 
   const { delay } = args;
 
-  settings.sameTitleDelay = Number(delay);
+  if (!settings[guildId]) settings[guildId] = settingsDefault;
+  settings[guildId].sameTitleDelay = Number(delay);
 
   await updateDatabase(
     wasLive,
@@ -19,10 +21,10 @@ const func = async ({ interaction, args, botState }) => {
   );
 
   let answer;
-  if (settings.sameTitleDelay <= 0) {
+  if (settings[guildId].sameTitleDelay <= 0) {
     answer = `Le délai est maintenant désactivé\n\n${delayExplainer}`;
   } else {
-    answer = `Le délai paramétré est maintenant de ${settings.sameTitleDelay} minutes\n\n${delayExplainer}`;
+    answer = `Le délai paramétré est maintenant de ${settings[guildId].sameTitleDelay} minutes\n\n${delayExplainer}`;
   }
 
   interaction

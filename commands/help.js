@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const settingsDefault = require("../settings");
 const { createMessageOptions } = require("../helpers/message");
 const { delayExplainer } = require("../constants");
 
@@ -8,12 +9,13 @@ const commandData = {
   defaultPermission: false,
 };
 
-const func = async ({ interaction, botState }) => {
+const func = async ({ interaction, guildId, botState }) => {
   const { settings } = botState;
+  if (!settings[guildId]) settings[guildId] = settingsDefault;
 
   const help = new Discord.MessageEmbed()
     .setTitle("DLiveBot")
-    .setColor(settings.color)
+    .setColor(settings[guildId].color)
     .setDescription(
       "Permet d'envoyer une notification sur le canal alerte lorsqu'un des streamers ajoutés commence un live"
     )
