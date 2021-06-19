@@ -14,7 +14,6 @@ const client = new Discord.Client({
   intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES],
 });
 
-let settings = require("./settings");
 const { parseDatabase, updateDatabase, logLoginTime } = require("./helpers/db");
 const {
   createChatWebSocket,
@@ -61,6 +60,8 @@ let alertHistory = {};
  * Latest streams with sent alert
  */
 let lastStreams = {};
+
+let settings = {};
 
 const getBotState = () => ({
   client,

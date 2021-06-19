@@ -321,7 +321,7 @@ const createChatWebSocket = (
             )
           )
       )
-      .as("minutes") < settings.sameTitleDelay;
+      .as("minutes") < settings[guildId].sameTitleDelay;
 
   /**
    * Send a new alert message

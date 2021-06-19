@@ -62,8 +62,10 @@ const getAlertMessageOptions = (
 ) => {
   const { settings } = botState;
   const msgEmbed = new Discord.MessageEmbed()
-    .setColor(settings.color)
-    .setFooter(processMessage(settings.footer, guildId, displayname, botState));
+    .setColor(settings[guildId].color)
+    .setFooter(
+      processMessage(settings[guildId].footer, guildId, displayname, botState)
+    );
 
   if (online) {
     const now = moment();
@@ -84,7 +86,12 @@ const getAlertMessageOptions = (
 
     msgEmbed
       .setTitle(
-        processMessage(settings.titleOnline, guildId, displayname, botState)
+        processMessage(
+          settings[guildId].titleOnline,
+          guildId,
+          displayname,
+          botState
+        )
       )
       .addField("Titre", stream.title)
       .addField("Catégorie", stream.category.title)
@@ -100,24 +107,34 @@ const getAlertMessageOptions = (
       )
       .addField("Citrons reçus", `${streamReward} :lemon:`, true)
       .setURL(
-        `https://dlive.tv/${displayname}?ref=${settings.referralUsername}`
+        `https://dlive.tv/${displayname}?ref=${settings[guildId].referralUsername}`
       );
     if (chestValue) {
-      const { chestNames } = settings;
+      const { chestNames } = settings[guildId];
       const ind = Math.floor(Math.random() * chestNames.length);
       msgEmbed.addField(chestNames[ind], `${chestValue} :lemon:`, true);
     }
   } else {
     msgEmbed
       .setTitle(
-        processMessage(settings.titleOffline, guildId, displayname, botState)
+        processMessage(
+          settings[guildId].titleOffline,
+          guildId,
+          displayname,
+          botState
+        )
       )
       .setDescription(
-        processMessage(settings.offlineMessage, guildId, displayname, botState)
+        processMessage(
+          settings[guildId].offlineMessage,
+          guildId,
+          displayname,
+          botState
+        )
       )
       .setImage(offlineImage)
       .setURL(
-        `https://dlive.tv/p/${permlink}?ref=${settings.referralUsername}`
+        `https://dlive.tv/p/${permlink}?ref=${settings[guildId].referralUsername}`
       );
   }
   return msgEmbed;
@@ -156,7 +173,7 @@ const sendAlertMessage = (
     .get(channelId)
     .send({
       content: processMessage(
-        settings.onlineMessage,
+        settings[guildId].onlineMessage,
         guildId,
         displayname,
         botState
@@ -234,7 +251,7 @@ const editAlertMessage = (
     .then((existingMsg) => {
       existingMsg.edit({
         content: processMessage(
-          settings.onlineMessage,
+          settings[guildId].onlineMessage,
           guildId,
           displayname,
           botState
