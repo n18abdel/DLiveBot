@@ -22,6 +22,11 @@ const {
   createChestWebSocket,
   getDisplayname,
 } = require("./helpers/request");
+const {
+  clearCommands,
+  upsertCommands,
+  getOptions,
+} = require("./helpers/command");
 
 client.commands = {};
 glob.sync("./commands/*.js").forEach((commandFile) => {
@@ -87,33 +92,6 @@ const clear = async (guildId) => {
   );
 };
 
-const upsertCommands = async (guild) => {
-  await guild.commands.set(
-    Object.values(client.commands).map((command) => command.commandData)
-  );
-  // allow admin roles and guild owner
-  const roles = guild.roles.cache.filter((role) =>
-    role.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR)
-  );
-  const permissions = roles.map((role) => ({
-    id: role.id,
-    type: "ROLE",
-    permission: true,
-  }));
-  permissions.push({
-    id: guild.ownerID,
-    type: "USER",
-    permission: true,
-  });
-  await guild.commands.fetch().then(async (existingCommands) => {
-    const setPermissionsObj = existingCommands.map((command) => ({
-      id: command.id,
-      permissions,
-    }));
-    await guild.commands.setPermissions(setPermissionsObj);
-  });
-};
-
 // ================= DISCORD BOT ===================
 client.on("ready", async () => {
   // Initialize the bot
@@ -168,37 +146,17 @@ client.on("ready", async () => {
   */
 });
 
-const getOptions = (interaction) => {
-  const { options } = interaction;
-  const args = {};
-
-  if (options) {
-    Array.from(options.values()).forEach((option) => {
-      const { name, value } = option;
-      args[name] = value;
-    });
-  }
-  return args;
-};
-
 client.once("ready", () => {
   client.guilds.cache.forEach(async (guild) => {
     // clear old commands
-    await guild.commands.fetch().then((existingCommands) =>
-      existingCommands.forEach(async (existingCommand) => {
-        const { name } = existingCommand;
-        if (!(name in client.commands)) {
-          await existingCommand.delete();
-        }
-      })
-    );
+    await clearCommands(guild, client.commands);
     // add/update the other commands
-    await upsertCommands(guild);
+    await upsertCommands(guild, client.commands);
   });
 });
 
 client.on("guildCreate", (guild) => {
-  upsertCommands(guild);
+  upsertCommands(guild, client.commands);
 });
 
 client.on("guildDelete", async (guild) => {
@@ -216,13 +174,16 @@ client.on("interaction", async (interaction) => {
     );
     const isAlertChannel = interaction.channel.name.includes("alerte");
     if (interaction.isCommand() && isAdmin && isAlertChannel) {
-      if (interaction.commandName in client.commands) {
-        const guildId = interaction.guild.id;
-        const channelId = interaction.channel.id;
+      const {
+        commandName,
+        guild: { id: guildId },
+        channel: { id: channelId },
+      } = interaction;
+      if (commandName in client.commands) {
         const args = getOptions(interaction);
         const botState = getBotState();
 
-        client.commands[interaction.commandName].func({
+        client.commands[commandName].func({
           interaction,
           guildId,
           channelId,
