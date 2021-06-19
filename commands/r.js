@@ -41,7 +41,7 @@ const func = async ({ interaction, guildId, args, botState }) => {
     ).unix();
 
     Promise.any(
-      range(60, -15).forEach(
+      range(60, -15).map(
         (i) =>
           new Promise((resolve, reject) => {
             const url = computeUrl(username, endingTimestamp + i);
@@ -56,7 +56,7 @@ const func = async ({ interaction, guildId, args, botState }) => {
     )
       .catch(() =>
         Promise.any(
-          range(60, -15).forEach(
+          range(60, -15).map(
             (i) =>
               new Promise((resolve, reject) => {
                 const url = computeUrl(username, beginningTimestamp + i, {
