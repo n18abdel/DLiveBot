@@ -1,5 +1,6 @@
 const https = require("https");
 const moment = require("moment-timezone");
+const { createMessageOptions } = require("../helpers/message");
 const { getUsername } = require("../helpers/request");
 
 const commandData = {
@@ -72,9 +73,9 @@ const func = async ({ interaction, guildId, args, botState }) => {
         )
       )
       .then((url) => {
-        interaction.reply(url);
+        interaction.reply(createMessageOptions(url));
       })
-      .catch(() => interaction.reply("nothing there"));
+      .catch(() => interaction.reply(createMessageOptions("nothing there")));
   });
 };
 
