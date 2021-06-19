@@ -34,10 +34,10 @@ const func = async ({ interaction, guildId, args, botState }) => {
 
   getUsername(s).then((username) => {
     const beginningTimestamp = moment(
-      Number(lastStreams[username][guildId].createdAt)
+      Number(lastStreams[guildId][username].createdAt)
     ).unix();
     const endingTimestamp = moment(
-      Number(lastStreams[username][guildId].finishedAt)
+      Number(lastStreams[guildId][username].finishedAt)
     ).unix();
 
     Promise.any(
