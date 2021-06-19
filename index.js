@@ -14,7 +14,6 @@ const client = new Discord.Client({
   intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES],
 });
 
-const glob = require("glob");
 let settings = require("./settings");
 const { parseDatabase, updateDatabase, logLoginTime } = require("./helpers/db");
 const {
@@ -23,15 +22,17 @@ const {
   getDisplayname,
 } = require("./helpers/request");
 const {
+  loadCommands,
   clearCommands,
   upsertCommands,
   getOptions,
 } = require("./helpers/command");
 
 client.commands = {};
-glob.sync("./commands/*.js").forEach((commandFile) => {
-  const commandName = commandFile.match(/\.\/commands\/(.*)\.js/)[1];
-  client.commands[commandName] = require(commandFile);
+Object.entries(
+  loadCommands({ folder: "commands", container: client.commands })
+).forEach(([command, path]) => {
+  client.commands[command] = require(path);
 });
 
 // ================= BOT STATE VARIABLES ===================
