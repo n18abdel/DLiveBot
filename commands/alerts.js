@@ -9,77 +9,47 @@ Object.entries(loadCommands({ folder: "alerts" })).forEach(
 );
 
 const commandData = {
-  name: "settings",
-  description: "Voir ou modifier les réglages",
+  name: "alerts",
+  description: "Gérer les alertes",
   options: [
     {
-      name: "delay",
-      type: "SUB_COMMAND_GROUP",
-      description:
-        "Le délai max entre 2 streams de même titre, avant d'envoyer une nouvelle alerte",
+      name: "add",
+      type: "SUB_COMMAND",
+      description: "Ajouter une alerte",
       options: [
         {
-          name: "get",
-          type: "SUB_COMMAND",
-          description: "Voir le délai paramétré",
-          defaultPermission: false,
-        },
-        {
-          name: "set",
-          type: "SUB_COMMAND",
-          description: "Modifier le délai (mettre 0 pour désactiver le délai)",
-          options: [
-            {
-              name: "delay",
-              type: "STRING",
-              description: "Délai en minutes",
-              required: true,
-            },
-          ],
-          defaultPermission: false,
+          name: "displayname",
+          type: "STRING",
+          description: "Le nom du streamer (tel qu'on le voit sur DLive)",
+          required: true,
         },
       ],
+      defaultPermission: false,
     },
     {
-      name: "color",
-      type: "SUB_COMMAND_GROUP",
-      description: "La couleur sur les messages du bot",
-      options: [
-        {
-          name: "get",
-          type: "SUB_COMMAND",
-          description: "Voir la couleur paramétrée",
-          defaultPermission: false,
-        },
-        {
-          name: "set",
-          type: "SUB_COMMAND",
-          description: "Modifier la couleur",
-          options: [
-            {
-              name: "delay",
-              type: "STRING",
-              description: "Délai en minutes",
-              required: true,
-            },
-          ],
-          defaultPermission: false,
-        },
-      ],
+      name: "clear",
+      type: "SUB_COMMAND",
+      description: "Retirer toutes les alertes",
+      defaultPermission: false,
+    },
+    {
+      name: "get",
+      type: "SUB_COMMAND",
+      description: "Voir les alertes existantes",
+      defaultPermission: false,
     },
   ],
   defaultPermission: false,
 };
 
 const func = async ({ interaction, guildId, channelId, args, botState }) => {
-  const { name: commandGroup } = args;
-  const { name: commandName } = getOptions(args);
+  const { name: commandName } = args;
 
-  funcs[commandGroup][commandName]({
+  funcs[commandName]({
     interaction,
     guildId,
     channelId,
-    args: getOptions(getOptions(args)),
+    args: getOptions(args),
     botState,
   });
 };
