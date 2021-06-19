@@ -1,24 +1,10 @@
-const { updateDatabase } = require("../helpers/db");
-const { createMessageOptions } = require("../helpers/message");
+const { updateDatabase } = require("../../helpers/db");
+const { createMessageOptions } = require("../../helpers/message");
 const {
   createChatWebSocket,
   createChestWebSocket,
   getUsername,
-} = require("../helpers/request");
-
-const commandData = {
-  name: "add",
-  description: "Ajouter une alerte",
-  options: [
-    {
-      name: "displayname",
-      type: "STRING",
-      description: "Le nom du streamer (tel qu'on le voit sur DLive)",
-      required: true,
-    },
-  ],
-  defaultPermission: false,
-};
+} = require("../../helpers/request");
 
 const func = async ({ interaction, guildId, channelId, args, botState }) => {
   const {
@@ -96,7 +82,4 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
     .catch((error) => console.log(error));
 };
 
-module.exports = {
-  commandData,
-  func,
-};
+module.exports = func;

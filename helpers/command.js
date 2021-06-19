@@ -64,7 +64,7 @@ const getOptions = (interaction) => {
 
   if (options) {
     Array.from(options.values()).forEach((option) => {
-      const { name, value, type, innerOptions } = option;
+      const { name, value, type, options: innerOptions } = option;
       if (value) args[name] = value;
       else args = { name, type, options: innerOptions };
     });
