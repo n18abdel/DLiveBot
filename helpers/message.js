@@ -181,7 +181,10 @@ const sendAlertMessage = (
 
       wasLive[guildId][username] = true;
       alertHistory[guildId][username] = message.id;
-      lastStreams[guildId][username] = selectTitlePermlink(stream);
+      lastStreams[guildId][username] = {
+        ...selectTitlePermlink(stream),
+        createdAt: stream.createdAt,
+      };
       await updateDatabase(
         wasLive,
         alertChannels,
