@@ -13,6 +13,22 @@ const { updateDatabase } = require("./db");
  */
 const selectTitlePermlink = ({ title, permlink }) => ({ title, permlink });
 
+const processSetMessage = (message) => {
+  let processedMessage = message;
+  processedMessage = processedMessage.replace(/\\n/g, "\n");
+  const emojis = Array.from(message.matchAll(/<(:.*?:)\d+>/g));
+
+  emojis.forEach((emoji) => {
+    const [rawEmoji, emojiName] = emoji;
+    processedMessage = processedMessage.replace(
+      new RegExp(rawEmoji),
+      emojiName
+    );
+  });
+
+  return processedMessage;
+};
+
 /**
  * Process input message, and retrieve custom emojis,
  * and replace displayname parameter with value
@@ -310,4 +326,9 @@ const createMessageOptions = (input, { embed = false } = {}) => {
   return { content: input, ephemeral: true };
 };
 
-module.exports = { sendAlertMessage, editAlertMessage, createMessageOptions };
+module.exports = {
+  sendAlertMessage,
+  editAlertMessage,
+  createMessageOptions,
+  processSetMessage,
+};
