@@ -1,6 +1,9 @@
 const settingsDefault = require("../../../settings");
 const { updateDatabase } = require("../../../helpers/db");
-const { createMessageOptions } = require("../../../helpers/message");
+const {
+  createMessageOptions,
+  processSetMessage,
+} = require("../../../helpers/message");
 
 const func = async ({ interaction, guildId, args, botState }) => {
   const { settings, wasLive, alertHistory, lastStreams, alertChannels } =
@@ -9,7 +12,7 @@ const func = async ({ interaction, guildId, args, botState }) => {
   const { titleonline } = args;
 
   if (!settings[guildId]) settings[guildId] = settingsDefault;
-  settings[guildId].titleOnline = titleonline;
+  settings[guildId].titleOnline = processSetMessage(titleonline);
 
   await updateDatabase(
     wasLive,
