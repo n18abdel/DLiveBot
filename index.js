@@ -15,11 +15,8 @@ const client = new Discord.Client({
 });
 
 const { parseDatabase, updateDatabase, logLoginTime } = require("./helpers/db");
-const {
-  createChatWebSocket,
-  createChestWebSocket,
-  getDisplayname,
-} = require("./helpers/request");
+const { addWebSockets, closeWebSockets } = require("./helpers/websocket");
+const { getDisplayname } = require("./helpers/request");
 const {
   loadCommands,
   clearCommands,
@@ -74,13 +71,7 @@ const getBotState = () => ({
 });
 
 const clear = async (guildId) => {
-  if (websockets[guildId]) {
-    websockets[guildId].forEach((ws) => {
-      clearTimeout(ws.pingTimeout);
-      ws.terminate();
-    });
-  }
-
+  closeWebSockets(websockets, guildId);
   delete wasLive[guildId];
   delete alertChannels[guildId];
   delete alertHistory[guildId];
@@ -116,22 +107,13 @@ client.on("ready", async () => {
 
         getDisplayname(username)
           .then((displayname) => {
-            const ws = createChatWebSocket(
+            addWebSockets(
               username,
               displayname,
               guildId,
               channelId,
               getBotState()
             );
-            const cs = createChestWebSocket(
-              username,
-              displayname,
-              guildId,
-              channelId,
-              getBotState()
-            );
-            websockets[guildId].push(ws);
-            websockets[guildId].push(cs);
           })
           .catch((error) => console.log(error));
       });
