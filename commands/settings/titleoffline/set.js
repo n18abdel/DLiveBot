@@ -6,10 +6,10 @@ const func = async ({ interaction, guildId, args, botState }) => {
   const { settings, wasLive, alertHistory, lastStreams, alertChannels } =
     botState;
 
-  const { color } = args;
+  const { titleoffline } = args;
 
   if (!settings[guildId]) settings[guildId] = settingsDefault;
-  settings[guildId].color = color;
+  settings[guildId].titleOffline = titleoffline;
 
   await updateDatabase(
     wasLive,
@@ -19,7 +19,7 @@ const func = async ({ interaction, guildId, args, botState }) => {
     settings
   );
 
-  const answer = `La couleur pour les messages du bot est maintenant:\n${settings[guildId].color}`;
+  const answer = `Le titre de l'alerte en fin de live est maintenant:\n${settings[guildId].titleOffline}`;
 
   interaction
     .reply(createMessageOptions(answer))
