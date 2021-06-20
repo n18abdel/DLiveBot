@@ -129,7 +129,7 @@ class ChatWebSocket extends DLiveWebSocket {
           username: this.username,
           stream,
           channelId: this.channelId,
-          channelName: this.channelId,
+          channelName: this.channelName,
           guildId: this.guildId,
           guildName: this.guildName,
           existingMsgId,
