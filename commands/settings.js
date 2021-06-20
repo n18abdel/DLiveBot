@@ -16,7 +16,7 @@ const commandData = {
   description: "Voir ou modifier les réglages",
   options: [
     {
-      name: "chest_names",
+      name: "chestnames",
       type: "SUB_COMMAND_GROUP",
       description: "Les noms possibles pour le coffre",
       options: [
