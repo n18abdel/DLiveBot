@@ -4,7 +4,6 @@ const Discord = require("discord.js");
 const loadCommands = ({ folder, subGroup = false }) => {
   const container = {};
   const files = glob.sync(`**/${folder}${subGroup ? "/**" : ""}/*.js`);
-
   files.forEach((commandFile) => {
     const commandName = commandFile.match(/.*\/(.*)\.js/)[1];
     if (subGroup) {

@@ -1,11 +1,8 @@
 const settingsDefault = require("../../settings");
 const { updateDatabase } = require("../../helpers/db");
 const { createMessageOptions } = require("../../helpers/message");
-const {
-  createChatWebSocket,
-  createChestWebSocket,
-  getUsername,
-} = require("../../helpers/request");
+const { addWebSockets } = require("../../helpers/websocket");
+const { getUsername } = require("../../helpers/request");
 
 const func = async ({ interaction, guildId, channelId, args, botState }) => {
   const {
@@ -52,22 +49,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
             settings
           );
 
-          const ws = createChatWebSocket(
-            username,
-            displayname,
-            guildId,
-            channelId,
-            botState
-          );
-          const cs = createChestWebSocket(
-            username,
-            displayname,
-            guildId,
-            channelId,
-            botState
-          );
-          websockets[guildId].push(ws);
-          websockets[guildId].push(cs);
+          addWebSockets(username, displayname, guildId, channelId, botState);
 
           interaction.reply(
             createMessageOptions(`Alerte paramétrée pour ${displayname}`)

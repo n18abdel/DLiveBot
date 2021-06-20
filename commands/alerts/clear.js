@@ -1,4 +1,4 @@
-const { closeWebsockets } = require("../../helpers/request");
+const { closeWebSockets } = require("../../helpers/websocket");
 const { updateDatabase } = require("../../helpers/db");
 const { createMessageOptions } = require("../../helpers/message");
 
@@ -12,7 +12,7 @@ const func = async ({ interaction, guildId, botState }) => {
     websockets,
   } = botState;
 
-  await closeWebsockets(websockets, guildId);
+  await closeWebSockets(websockets, guildId);
   delete wasLive[guildId];
   delete alertChannels[guildId];
   delete alertHistory[guildId];
