@@ -1,4 +1,7 @@
 const WebSocket = require("ws");
+const moment = require("moment-timezone");
+const { updateDatabase } = require("../db");
+const { sendAlertMessage, editAlertMessage } = require("../message");
 
 // delay in seconds without heartbeat
 // after which the websockets are restarted
@@ -110,6 +113,74 @@ class DLiveWebSocket {
   close() {
     clearTimeout(this.socket.pingTimeout);
     this.socket.terminate();
+  }
+
+  sameTitleWithinDelay(stream) {
+    return (
+      stream.title === this.lastStreams[this.guildId][this.username].title &&
+      moment
+        .duration(
+          moment(Number(stream.createdAt))
+            .unix()
+            .diff(
+              moment(
+                Number(this.lastStreams[this.guildId][this.username].finishedAt)
+              ).unix()
+            )
+        )
+        .as("minutes") < this.settings[this.guildId].sameTitleDelay
+    );
+  }
+
+  newAlertOrExistingOne(stream) {
+    if (
+      this.lastStreams[this.guildId][this.username] &&
+      (stream.permlink ===
+        this.lastStreams[this.guildId][this.username].permlink ||
+        this.sameTitleWithinDelay(stream))
+    ) {
+      /**
+       * there was a bug the stream went off and back up
+       * or
+       * there was a stream with the same title not "so long ago"
+       */
+      const existingMsgId = this.alertHistory[this.guildId][this.username];
+
+      editAlertMessage(
+        {
+          displayname: this.displayname,
+          username: this.username,
+          stream,
+          channelId: this.channelId,
+          channelName: this.channelName,
+          guildId: this.guildId,
+          guildName: this.guildName,
+          existingMsgId,
+          online: true,
+        },
+        this.botState
+      ).then(async () => {
+        this.wasLive[this.guildId][this.username] = true;
+        await updateDatabase(
+          this.wasLive,
+          this.alertChannels,
+          this.alertHistory,
+          this.lastStreams,
+          this.settings
+        );
+      });
+    } else {
+      sendAlertMessage(
+        this.displayname,
+        this.username,
+        stream,
+        this.guildId,
+        this.channelId,
+        this.channelName,
+        this.guildName,
+        this.botState
+      );
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 const DLiveWebSocket = require("./DLiveWebSocket");
 const { getStreamInfo } = require("../request");
-const { sendAlertMessage, editAlertMessage } = require("../message");
+const { editAlertMessage } = require("../message");
 
 class ChestWebSocket extends DLiveWebSocket {
   constructor(username, displayname, guildId, channelId, botState) {
@@ -44,16 +44,7 @@ class ChestWebSocket extends DLiveWebSocket {
           if (isLive) {
             // there was a bug, the streamer went live without any sent alert
 
-            sendAlertMessage(
-              this.displayname,
-              this.username,
-              stream,
-              this.guildId,
-              this.channelId,
-              this.channelName,
-              this.guildName,
-              this.botState
-            );
+            this.newAlertOrExistingOne(stream);
           }
         }
       })
