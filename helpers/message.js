@@ -4,14 +4,6 @@ const moment = require("moment-timezone");
 const { updateDatabase } = require("./db");
 
 // ================= ALERT MESSAGE HELPERS ===================
-/**
- * Return only the properties title and permlink
- * from the input stream object
- *
- * @param {object} stream
- * @return {object}
- */
-const selectTitlePermlink = ({ title, permlink }) => ({ title, permlink });
 
 const processSetMessage = (message) => {
   let processedMessage = message;
@@ -215,7 +207,8 @@ const sendAlertMessage = (
       wasLive[guildId][username] = true;
       alertHistory[guildId][username] = message.id;
       lastStreams[guildId][username] = {
-        ...selectTitlePermlink(stream),
+        title: stream.title,
+        permlink: stream.permlink,
         createdAt: stream.createdAt,
       };
       await updateDatabase(
@@ -304,9 +297,16 @@ const editAlertMessage = (
           lastStreams,
           settings
         );
-      } else if (stream.title !== lastStreams[guildId][username]) {
+      } else if (
+        stream.title !== lastStreams[guildId][username].title ||
+        stream.createdAt !== lastStreams[guildId][username].createdAt
+      ) {
         // the stream is still up
-        lastStreams[guildId][username].title = stream.title;
+        lastStreams[guildId][username] = {
+          title: stream.title,
+          permlink: stream.permlink,
+          createdAt: stream.createdAt,
+        };
         await updateDatabase(
           wasLive,
           alertChannels,
