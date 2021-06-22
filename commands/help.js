@@ -22,17 +22,12 @@ const func = async ({ interaction, guildId, botState }) => {
     .addField("\u200b", "\u200b")
     .addField("Qui peut paramétrer ce bot ?", "Les administrateurs du serveur")
     .addField("\u200b", "\u200b")
-    .addField("Ajouter une alerte", "/add <nom_du_streamer>", true)
-    .addField("Exemple", "/add Marvelfit", true)
-    .addField("Voir les alertes existantes", "/get")
-    .addField("Retirer toutes les alertes", "/clear")
+    .addField("Gérer les alertes", "/alerts ...")
+    .addField("Voir ou modifier les réglages", "/settings ...")
     .addField("\u200b", "\u200b") // blank field
-    .addField("Trouver l'username d'une personne", "/get_username", true)
-    .addField("Exemple", "/get_username <displayname>", true)
+    .addField("Trouver l'username d'un utilisateur", "/getusername", true)
+    .addField("Exemple", "/getusername <displayname>", true)
     .addField("\u200b", "\u200b")
-    .addField("Voir le délai paramétré", "/get_delay")
-    .addField("Modifier le délai", "/set_delay", true)
-    .addField("Exemple", "/set_delay 10", true)
     .addField("À propos du délai", delayExplainer);
   const message = createMessageOptions(help, { embed: true });
   interaction.reply(message).catch((error) => console.log(error));
