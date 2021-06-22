@@ -63,7 +63,7 @@ class ChatWebSocket extends DLiveWebSocket {
 
       if (
         ChatWebSocket.minutesSinceLastStream(finishedAt) > 2 &&
-        this.goLiveLoop < 15
+        this.goOfflineLoop < 15
       ) {
         // finishedAt is maybe not yet updated
         this.goOfflineLoop += 1;
