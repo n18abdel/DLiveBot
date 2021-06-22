@@ -8,8 +8,20 @@ const func = async ({ interaction, guildId, args, botState }) => {
 
   const { color } = args;
 
+  const isHexColor = (hex) =>
+    typeof hex === "string" &&
+    hex.replace("#", "").length === 6 &&
+    !Number.isNaN(Number(`0x${hex.replace("#", "")}`));
+
   if (!settings[guildId]) settings[guildId] = settingsDefault;
-  settings[guildId].color = color;
+
+  let answer;
+  if (isHexColor(color)) {
+    settings[guildId].color = color;
+    answer = `La couleur pour les messages du bot est maintenant:\n${settings[guildId].color}`;
+  } else {
+    answer = `${color} n'est pas un hex string.\nVérifiez votre saisie (exemple: #ffd300)`;
+  }
 
   await updateDatabase(
     wasLive,
@@ -18,8 +30,6 @@ const func = async ({ interaction, guildId, args, botState }) => {
     lastStreams,
     settings
   );
-
-  const answer = `La couleur pour les messages du bot est maintenant:\n${settings[guildId].color}`;
 
   interaction
     .reply(createMessageOptions(answer))
