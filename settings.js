@@ -15,7 +15,6 @@ const colorDefault = "#ffd300";
  *  - we can change displayname monthly
  *    but the username is fixed)
  *
- * you can use the command dbot_get_username <displayname>
  * (displayname is what you see on DLive)
  */
 const referralUsernameDefault = "son-son";

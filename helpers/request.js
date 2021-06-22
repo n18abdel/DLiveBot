@@ -1,6 +1,5 @@
 const https = require("https");
 
-// ================= REQUEST HELPERS ===================
 // options for http requests on DLive GraphQL API
 const requestOptions = {
   hostname: "graphigo.prd.dlive.tv",

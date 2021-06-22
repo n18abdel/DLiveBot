@@ -32,32 +32,41 @@ Object.entries(
 });
 
 // ================= BOT STATE VARIABLES ===================
-/** {guildId: [websocket]}
+/**
+ * {guildId: [websocket]}
  * Websockets of added streamers
  */
 const websockets = {};
 
-/** {guildId: {streamerUsername: boolean}}
+/**
+ * {guildId: {streamerUsername: boolean}}
  * Previous streaming state of added streamers
  */
 let wasLive = {};
 
-/** {guildId: channelId}
+/**
+ * {guildId: channelId}
  * Channels where the bot should send the alerts
  */
 let alertChannels = {};
 
-/** {guildId: {streamerUsername: messageId}}
+/**
+ * {guildId: {streamerUsername: messageId}}
  * History of the latest sent alert messages
  * to be able to update them
  */
 let alertHistory = {};
 
-/** {guildId: {streamerUsername: stream}}
+/**
+ * {guildId: {streamerUsername: stream}}
  * Latest streams with sent alert
  */
 let lastStreams = {};
 
+/**
+ * {guildId: settings}
+ * Settings per guild
+ */
 let settings = {};
 
 const getBotState = () => ({
@@ -87,10 +96,8 @@ const clear = async (guildId) => {
 
 // ================= DISCORD BOT ===================
 client.on("ready", async () => {
-  // Initialize the bot
   console.log("[Discord]", `Logged in as ${client.user.tag}!`);
 
-  // Log last login time
   logLoginTime();
 
   ({ wasLive, alertChannels, alertHistory, lastStreams, settings } =
@@ -98,7 +105,7 @@ client.on("ready", async () => {
   /**
    * Retrieve previously set up alerts
    * and recreate the associated websockets
-   * */
+   */
   Object.keys(wasLive).forEach(async (guildId) => {
     if (client.guilds.cache.get(guildId)) {
       websockets[guildId] = [];
@@ -121,13 +128,6 @@ client.on("ready", async () => {
       await clear(guildId);
     }
   });
-
-  /* DEBUG to check bot permissions
-  const guildIdToCheck = "<toFill>"
-  const channelIdToCheck = "<toFill>"
-  console.log(client.guilds.cache.get(guildIdToCheck).me.permissions.toArray())
-  console.log(client.channels.cache.get(channelIdToCheck).permissionsFor(client.user).toArray())
-  */
 });
 
 client.once("ready", () => {
@@ -144,8 +144,9 @@ client.on("guildCreate", (guild) => {
 });
 
 client.on("guildDelete", async (guild) => {
-  // do nothing if the server is only in outage
+  // kicked from server or server outage
   if (guild.available) {
+    // not an outage so kicked from server
     const guildId = guild.id;
     await clear(guildId);
   }
@@ -181,7 +182,4 @@ client.on("interaction", async (interaction) => {
   }
 });
 
-// You really don't want your token here since your repl's code
-// is publically available. We'll take advantage of a Repl.it
-// feature to hide the token we got earlier.
 client.login(process.env.DISCORD_TOKEN);
