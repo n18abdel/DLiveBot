@@ -3,7 +3,12 @@ const moment = require("moment-timezone");
 
 const { updateDatabase } = require("./db");
 
-// ================= ALERT MESSAGE HELPERS ===================
+/**
+ * Process message from set commands (emojis and newlines)
+ *
+ * @param {*} message
+ * @returns
+ */
 
 const processSetMessage = (message) => {
   let processedMessage = message;
@@ -29,7 +34,8 @@ const processSetMessage = (message) => {
  * @param {string} guildId
  * @param {string} displayname
  * @param {object} botState
- * @return {string}
+ * @param botState.client
+ * @returns {string}
  */
 const processMessage = (message, guildId, displayname, { client }) => {
   let processedMessage = message;
@@ -61,8 +67,15 @@ const processMessage = (message, guildId, displayname, { client }) => {
  * Message options for the alert sent on discord
  *
  * @param {object} params
+ * @param params.displayname
+ * @param params.stream
+ * @param params.online
+ * @param params.chestValue
+ * @param params.permlink
+ * @param params.guildId
+ * @param params.offlineImage
  * @param {object} botState
- * @return {object}
+ * @returns {object}
  */
 const getAlertMessageOptions = (
   { displayname, stream, online, chestValue, permlink, guildId, offlineImage },
@@ -226,6 +239,19 @@ const sendAlertMessage = (
  * Edit existing alert message with updates
  *
  * @param {object} params
+ * @param params.displayname
+ * @param params.username
+ * @param params.stream
+ * @param params.channelId
+ * @param params.channelName
+ * @param params.guildId
+ * @param params.guildName
+ * @param params.existingMsgId
+ * @param params.online
+ * @param params.chestValue
+ * @param params.permlink
+ * @param params.offlineImage
+ * @param params.finishedAt
  * @param {object} botState
  */
 const editAlertMessage = (

@@ -1,5 +1,3 @@
-// ================= BOT STATE DB HELPERS ===================
-
 const admin = require("firebase-admin");
 
 const serviceAccount = {
@@ -87,7 +85,7 @@ const parseDatabase = async () => {
 /**
  * Log the last loginTime
  *
- * @param {Number} maxLoginsToLog
+ * @param {number} maxLoginsToLog
  */
 const logLoginTime = (maxLoginsToLog = 10) => {
   const loginTime = moment().tz(timezone);
