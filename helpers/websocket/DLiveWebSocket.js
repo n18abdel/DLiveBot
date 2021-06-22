@@ -120,13 +120,11 @@ class DLiveWebSocket {
       stream.title === this.lastStreams[this.guildId][this.username].title &&
       moment
         .duration(
-          moment(Number(stream.createdAt))
-            .unix()
-            .diff(
-              moment(
-                Number(this.lastStreams[this.guildId][this.username].finishedAt)
-              ).unix()
+          moment(Number(stream.createdAt)).diff(
+            moment(
+              Number(this.lastStreams[this.guildId][this.username].finishedAt)
             )
+          )
         )
         .as("minutes") < this.settings[this.guildId].sameTitleDelay
     );
