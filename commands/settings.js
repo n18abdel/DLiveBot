@@ -186,9 +186,9 @@ const commandData = {
       ],
     },
     {
-      name: "referralusername",
+      name: "referral",
       type: "SUB_COMMAND_GROUP",
-      description: "L'username pour le lien referral",
+      description: "L'utilisateur pour le lien referral",
       options: [
         {
           name: "get",
@@ -202,9 +202,10 @@ const commandData = {
           description: "Modifier le referral",
           options: [
             {
-              name: "referralusername",
+              name: "displayname",
               type: "STRING",
-              description: "L'username pour le lien referral",
+              description:
+                "Le nom de l'utilisateur (tel qu'on le voit sur DLive)",
               required: true,
             },
           ],
