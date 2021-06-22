@@ -2,13 +2,13 @@ const { createMessageOptions } = require("../helpers/message");
 const { getUsername } = require("../helpers/request");
 
 const commandData = {
-  name: "get_username",
-  description: "Trouver l'username d'une personne",
+  name: "getusername",
+  description: "Trouver l'username d'un utilisateur",
   options: [
     {
       name: "displayname",
       type: "STRING",
-      description: "Le nom du streamer (tel qu'on le voit sur DLive)",
+      description: "Le nom de l'utilisateur (tel qu'on le voit sur DLive)",
       required: true,
     },
   ],
