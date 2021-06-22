@@ -1,3 +1,4 @@
+const moment = require("moment-timezone");
 const DLiveWebSocket = require("./DLiveWebSocket");
 const { getStreamInfo } = require("../request");
 const { editAlertMessage } = require("../message");
@@ -10,6 +11,7 @@ class ChatWebSocket extends DLiveWebSocket {
     const { lastStreams, alertChannels, settings } = botState;
     Object.assign(this, { lastStreams, alertChannels, settings });
     this.goLiveLoop = 0;
+    this.goOfflineLoop = 0;
     this.init();
   }
 
@@ -42,6 +44,12 @@ class ChatWebSocket extends DLiveWebSocket {
     }
   }
 
+  static minutesSinceLastStream(finishedAt) {
+    return moment
+      .duration(moment().diff(moment(Number(finishedAt))))
+      .as("minutes");
+  }
+
   async streamerGoOffline() {
     try {
       const user = await getStreamInfo(this.username);
@@ -53,23 +61,33 @@ class ChatWebSocket extends DLiveWebSocket {
       const existingMsgId = this.alertHistory[this.guildId][this.username];
       const { permlink } = this.lastStreams[this.guildId][this.username];
 
-      editAlertMessage(
-        {
-          displayname: this.displayname,
-          username: this.username,
-          stream,
-          channelId: this.channelId,
-          channelName: this.channelName,
-          guildId: this.guildId,
-          guildName: this.guildName,
-          existingMsgId,
-          online: false,
-          permlink,
-          offlineImage,
-          finishedAt,
-        },
-        this.botState
-      );
+      if (
+        ChatWebSocket.minutesSinceLastStream(finishedAt) > 2 &&
+        this.goLiveLoop < 15
+      ) {
+        // finishedAt is maybe not yet updated
+        this.goOfflineLoop += 1;
+        setTimeout(() => this.streamerGoOffline(), 5000);
+      } else {
+        this.goOfflineLoop = 0;
+        editAlertMessage(
+          {
+            displayname: this.displayname,
+            username: this.username,
+            stream,
+            channelId: this.channelId,
+            channelName: this.channelName,
+            guildId: this.guildId,
+            guildName: this.guildName,
+            existingMsgId,
+            online: false,
+            permlink,
+            offlineImage,
+            finishedAt,
+          },
+          this.botState
+        );
+      }
     } catch (err) {
       console.log(err);
     }
