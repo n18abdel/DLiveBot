@@ -77,7 +77,7 @@ const getAlertMessageOptions = (
 
   if (online) {
     const now = moment();
-    const startedAt = moment.unix(Number(stream.createdAt) / 1000);
+    const startedAt = moment(Number(stream.createdAt));
     const duration = moment.duration(now.diff(startedAt));
     const hours = duration.hours();
     const minutes = duration.minutes();
