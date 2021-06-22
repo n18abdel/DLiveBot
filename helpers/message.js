@@ -3,15 +3,28 @@ const moment = require("moment-timezone");
 
 const { updateDatabase } = require("./db");
 
-// ================= ALERT MESSAGE HELPERS ===================
 /**
- * Return only the properties title and permlink
- * from the input stream object
+ * Process message from set commands (emojis and newlines)
  *
- * @param {object} stream
- * @return {object}
+ * @param {*} message
+ * @returns
  */
-const selectTitlePermlink = ({ title, permlink }) => ({ title, permlink });
+
+const processSetMessage = (message) => {
+  let processedMessage = message;
+  processedMessage = processedMessage.replace(/\\n/g, "\n");
+  const emojis = Array.from(message.matchAll(/<(:.*?:)\d+>/g));
+
+  emojis.forEach((emoji) => {
+    const [rawEmoji, emojiName] = emoji;
+    processedMessage = processedMessage.replace(
+      new RegExp(rawEmoji),
+      emojiName
+    );
+  });
+
+  return processedMessage;
+};
 
 /**
  * Process input message, and retrieve custom emojis,
@@ -21,7 +34,8 @@ const selectTitlePermlink = ({ title, permlink }) => ({ title, permlink });
  * @param {string} guildId
  * @param {string} displayname
  * @param {object} botState
- * @return {string}
+ * @param botState.client
+ * @returns {string}
  */
 const processMessage = (message, guildId, displayname, { client }) => {
   let processedMessage = message;
@@ -53,8 +67,15 @@ const processMessage = (message, guildId, displayname, { client }) => {
  * Message options for the alert sent on discord
  *
  * @param {object} params
+ * @param params.displayname
+ * @param params.stream
+ * @param params.online
+ * @param params.chestValue
+ * @param params.permlink
+ * @param params.guildId
+ * @param params.offlineImage
  * @param {object} botState
- * @return {object}
+ * @returns {object}
  */
 const getAlertMessageOptions = (
   { displayname, stream, online, chestValue, permlink, guildId, offlineImage },
@@ -62,12 +83,14 @@ const getAlertMessageOptions = (
 ) => {
   const { settings } = botState;
   const msgEmbed = new Discord.MessageEmbed()
-    .setColor(settings.color)
-    .setFooter(processMessage(settings.footer, guildId, displayname, botState));
+    .setColor(settings[guildId].color)
+    .setFooter(
+      processMessage(settings[guildId].footer, guildId, displayname, botState)
+    );
 
   if (online) {
     const now = moment();
-    const startedAt = moment.unix(Number(stream.createdAt) / 1000);
+    const startedAt = moment(Number(stream.createdAt));
     const duration = moment.duration(now.diff(startedAt));
     const hours = duration.hours();
     const minutes = duration.minutes();
@@ -84,7 +107,12 @@ const getAlertMessageOptions = (
 
     msgEmbed
       .setTitle(
-        processMessage(settings.titleOnline, guildId, displayname, botState)
+        processMessage(
+          settings[guildId].titleOnline,
+          guildId,
+          displayname,
+          botState
+        )
       )
       .addField("Titre", stream.title)
       .addField("Catégorie", stream.category.title)
@@ -100,24 +128,34 @@ const getAlertMessageOptions = (
       )
       .addField("Citrons reçus", `${streamReward} :lemon:`, true)
       .setURL(
-        `https://dlive.tv/${displayname}?ref=${settings.referralUsername}`
+        `https://dlive.tv/${displayname}?ref=${settings[guildId].referralUsername}`
       );
     if (chestValue) {
-      const { chestNames } = settings;
+      const { chestNames } = settings[guildId];
       const ind = Math.floor(Math.random() * chestNames.length);
       msgEmbed.addField(chestNames[ind], `${chestValue} :lemon:`, true);
     }
   } else {
     msgEmbed
       .setTitle(
-        processMessage(settings.titleOffline, guildId, displayname, botState)
+        processMessage(
+          settings[guildId].titleOffline,
+          guildId,
+          displayname,
+          botState
+        )
       )
       .setDescription(
-        processMessage(settings.offlineMessage, guildId, displayname, botState)
+        processMessage(
+          settings[guildId].offlineMessage,
+          guildId,
+          displayname,
+          botState
+        )
       )
       .setImage(offlineImage)
       .setURL(
-        `https://dlive.tv/p/${permlink}?ref=${settings.referralUsername}`
+        `https://dlive.tv/p/${permlink}?ref=${settings[guildId].referralUsername}`
       );
   }
   return msgEmbed;
@@ -156,7 +194,7 @@ const sendAlertMessage = (
     .get(channelId)
     .send({
       content: processMessage(
-        settings.onlineMessage,
+        settings[guildId].onlineMessage,
         guildId,
         displayname,
         botState
@@ -182,7 +220,8 @@ const sendAlertMessage = (
       wasLive[guildId][username] = true;
       alertHistory[guildId][username] = message.id;
       lastStreams[guildId][username] = {
-        ...selectTitlePermlink(stream),
+        title: stream.title,
+        permlink: stream.permlink,
         createdAt: stream.createdAt,
       };
       await updateDatabase(
@@ -200,6 +239,19 @@ const sendAlertMessage = (
  * Edit existing alert message with updates
  *
  * @param {object} params
+ * @param params.displayname
+ * @param params.username
+ * @param params.stream
+ * @param params.channelId
+ * @param params.channelName
+ * @param params.guildId
+ * @param params.guildName
+ * @param params.existingMsgId
+ * @param params.online
+ * @param params.chestValue
+ * @param params.permlink
+ * @param params.offlineImage
+ * @param params.finishedAt
  * @param {object} botState
  */
 const editAlertMessage = (
@@ -234,7 +286,7 @@ const editAlertMessage = (
     .then((existingMsg) => {
       existingMsg.edit({
         content: processMessage(
-          settings.onlineMessage,
+          settings[guildId].onlineMessage,
           guildId,
           displayname,
           botState
@@ -271,9 +323,16 @@ const editAlertMessage = (
           lastStreams,
           settings
         );
-      } else if (stream.title !== lastStreams[guildId][username]) {
+      } else if (
+        stream.title !== lastStreams[guildId][username].title ||
+        stream.createdAt !== lastStreams[guildId][username].createdAt
+      ) {
         // the stream is still up
-        lastStreams[guildId][username].title = stream.title;
+        lastStreams[guildId][username] = {
+          title: stream.title,
+          permlink: stream.permlink,
+          createdAt: stream.createdAt,
+        };
         await updateDatabase(
           wasLive,
           alertChannels,
@@ -293,4 +352,9 @@ const createMessageOptions = (input, { embed = false } = {}) => {
   return { content: input, ephemeral: true };
 };
 
-module.exports = { sendAlertMessage, editAlertMessage, createMessageOptions };
+module.exports = {
+  sendAlertMessage,
+  editAlertMessage,
+  createMessageOptions,
+  processSetMessage,
+};

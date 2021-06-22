@@ -1,24 +1,8 @@
-const { updateDatabase } = require("../helpers/db");
-const { createMessageOptions } = require("../helpers/message");
-const {
-  createChatWebSocket,
-  createChestWebSocket,
-  getUsername,
-} = require("../helpers/request");
-
-const commandData = {
-  name: "add",
-  description: "Ajouter une alerte",
-  options: [
-    {
-      name: "displayname",
-      type: "STRING",
-      description: "Le nom du streamer (tel qu'on le voit sur DLive)",
-      required: true,
-    },
-  ],
-  defaultPermission: false,
-};
+const settingsDefault = require("../../settings");
+const { updateDatabase } = require("../../helpers/db");
+const { createMessageOptions } = require("../../helpers/message");
+const { addWebSockets } = require("../../helpers/websocket");
+const { getUsername } = require("../../helpers/request");
 
 const func = async ({ interaction, guildId, channelId, args, botState }) => {
   const {
@@ -38,6 +22,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
     alertHistory[guildId] = {};
     lastStreams[guildId] = {};
     alertChannels[guildId] = channelId;
+    settings[guildId] = settingsDefault;
     await updateDatabase(
       wasLive,
       alertChannels,
@@ -64,22 +49,7 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
             settings
           );
 
-          const ws = createChatWebSocket(
-            username,
-            displayname,
-            guildId,
-            channelId,
-            botState
-          );
-          const cs = createChestWebSocket(
-            username,
-            displayname,
-            guildId,
-            channelId,
-            botState
-          );
-          websockets[guildId].push(ws);
-          websockets[guildId].push(cs);
+          addWebSockets(username, displayname, guildId, channelId, botState);
 
           interaction.reply(
             createMessageOptions(`Alerte paramétrée pour ${displayname}`)
@@ -96,7 +66,4 @@ const func = async ({ interaction, guildId, channelId, args, botState }) => {
     .catch((error) => console.log(error));
 };
 
-module.exports = {
-  commandData,
-  func,
-};
+module.exports = func;

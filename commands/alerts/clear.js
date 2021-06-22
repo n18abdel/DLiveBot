@@ -1,12 +1,6 @@
-const { closeWebsockets } = require("../helpers/request");
-const { updateDatabase } = require("../helpers/db");
-const { createMessageOptions } = require("../helpers/message");
-
-const commandData = {
-  name: "clear",
-  description: "Retirer toutes les alertes",
-  defaultPermission: false,
-};
+const { closeWebSockets } = require("../../helpers/websocket");
+const { updateDatabase } = require("../../helpers/db");
+const { createMessageOptions } = require("../../helpers/message");
 
 const func = async ({ interaction, guildId, botState }) => {
   const {
@@ -18,11 +12,12 @@ const func = async ({ interaction, guildId, botState }) => {
     websockets,
   } = botState;
 
-  await closeWebsockets(websockets, guildId);
+  await closeWebSockets(websockets, guildId);
   delete wasLive[guildId];
   delete alertChannels[guildId];
   delete alertHistory[guildId];
   delete lastStreams[guildId];
+  delete settings[guildId];
   await updateDatabase(
     wasLive,
     alertChannels,
@@ -36,7 +31,4 @@ const func = async ({ interaction, guildId, botState }) => {
     .catch((error) => console.log(error));
 };
 
-module.exports = {
-  commandData,
-  func,
-};
+module.exports = func;

@@ -1,11 +1,5 @@
-const { createMessageOptions } = require("../helpers/message");
-const { getDisplayname } = require("../helpers/request");
-
-const commandData = {
-  name: "get",
-  description: "Voir les alertes existantes",
-  defaultPermission: false,
-};
+const { createMessageOptions } = require("../../helpers/message");
+const { getDisplayname } = require("../../helpers/request");
 
 const func = async ({ interaction, guildId, botState }) => {
   const { wasLive } = botState;
@@ -31,7 +25,4 @@ const func = async ({ interaction, guildId, botState }) => {
   }
 };
 
-module.exports = {
-  commandData,
-  func,
-};
+module.exports = func;
