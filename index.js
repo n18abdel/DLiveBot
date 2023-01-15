@@ -21,7 +21,6 @@ const {
   loadCommands,
   clearCommands,
   upsertCommands,
-  getOptions,
 } = require("./helpers/command");
 
 client.commands = {};
@@ -152,27 +151,15 @@ client.on("guildDelete", async (guild) => {
   }
 });
 
-client.on("interaction", async (interaction) => {
+client.on("interactionCreate", async (interaction) => {
   try {
-    const isAdmin = interaction.member.permissions.has(
-      Discord.Permissions.FLAGS.ADMINISTRATOR
-    );
-    const isAlertChannel = interaction.channel.name.includes("alerte");
-    if (interaction.isCommand() && isAdmin && isAlertChannel) {
-      const {
-        commandName,
-        guild: { id: guildId },
-        channel: { id: channelId },
-      } = interaction;
-      if (commandName in client.commands) {
-        const args = getOptions(interaction);
+    const isAlertChannel = interaction.channel.name.includes("alert");
+    if (interaction.isCommand() && isAlertChannel) {
+      if (interaction.commandName in client.commands) {
         const botState = getBotState();
 
-        client.commands[commandName].func({
+        client.commands[interaction.commandName].func({
           interaction,
-          guildId,
-          channelId,
-          args,
           botState,
         });
       }

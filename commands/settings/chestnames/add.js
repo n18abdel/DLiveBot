@@ -1,13 +1,15 @@
+const _ = require("lodash");
 const settingsDefault = require("../../../settings");
 const { updateDatabase } = require("../../../helpers/db");
 const { createMessageOptions } = require("../../../helpers/message");
 
-const func = async ({ interaction, guildId, args, botState }) => {
+const func = async ({ interaction, botState }) => {
+  const { guildId } = interaction;
   const { settings, wasLive, alertHistory, lastStreams, alertChannels } =
     botState;
-  if (!settings[guildId]) settings[guildId] = settingsDefault;
+  if (!settings[guildId]) settings[guildId] = _.cloneDeep(settingsDefault);
 
-  const { chestname } = args;
+  const chestname = interaction.options.getString("chestname");
 
   settings[guildId].chestNames.push(chestname);
 
@@ -19,10 +21,15 @@ const func = async ({ interaction, guildId, args, botState }) => {
     settings
   );
 
-  const answer = `Le nom de coffre ${chestname} a été ajouté`;
+  const locales = {
+    fr: `Le nom de coffre ${chestname} a été ajouté`,
+    "en-US": `Chest name ${chestname} has been added`,
+  };
 
   interaction
-    .reply(createMessageOptions(answer))
+    .reply(
+      createMessageOptions(locales[interaction.locale] ?? locales["en-US"])
+    )
     .catch((error) => console.log(error));
 };
 

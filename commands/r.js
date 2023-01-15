@@ -1,21 +1,17 @@
 const https = require("https");
 const moment = require("moment-timezone");
+const { SlashCommandBuilder } = require("@discordjs/builders");
 const { createMessageOptions } = require("../helpers/message");
 const { getUsername } = require("../helpers/request");
 
-const commandData = {
-  name: "r",
-  description: "r",
-  options: [
-    {
-      name: "s",
-      type: "STRING",
-      description: "s",
-      required: true,
-    },
-  ],
-  defaultPermission: false,
-};
+const commandData = new SlashCommandBuilder()
+  .setName("r")
+  .setDescription("r")
+  .setDefaultMemberPermissions("0")
+  .addStringOption((option) =>
+    option.setName("s").setDescription("s").setRequired(true)
+  )
+  .toJSON();
 
 const range = (size, startAt) =>
   [...Array(size).keys()].map((i) => i + startAt);
@@ -27,10 +23,11 @@ const computeUrl = (username, timestamp, { end = true } = {}) => {
   return `https://playback.prd.dlivecdn.com/live/${username}/${timestamp}/vod.m3u8`;
 };
 
-const func = async ({ interaction, guildId, args, botState }) => {
+const func = async ({ interaction, botState }) => {
+  const { guildId } = interaction;
   const { lastStreams } = botState;
 
-  const { s } = args;
+  const s = interaction.options.getString("s");
 
   getUsername(s).then((username) => {
     const beginningTimestamp = moment(

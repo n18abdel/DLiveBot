@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const settingsDefault = require("../../../settings");
 const { updateDatabase } = require("../../../helpers/db");
 const {
@@ -5,13 +6,14 @@ const {
   processSetMessage,
 } = require("../../../helpers/message");
 
-const func = async ({ interaction, guildId, args, botState }) => {
+const func = async ({ interaction, botState }) => {
+  const { guildId } = interaction;
   const { settings, wasLive, alertHistory, lastStreams, alertChannels } =
     botState;
 
-  const { onlinemessage } = args;
+  const onlinemessage = interaction.options.getString("onlinemessage");
 
-  if (!settings[guildId]) settings[guildId] = settingsDefault;
+  if (!settings[guildId]) settings[guildId] = _.cloneDeep(settingsDefault);
   settings[guildId].onlineMessage = processSetMessage(onlinemessage);
 
   await updateDatabase(
@@ -22,10 +24,15 @@ const func = async ({ interaction, guildId, args, botState }) => {
     settings
   );
 
-  const answer = `Le message de début de live est maintenant:\n${settings[guildId].onlineMessage}`;
+  const locales = {
+    fr: `Le message de début de live est maintenant :\n${settings[guildId].onlineMessage}`,
+    "en-US": `The online message is now:\n${settings[guildId].onlineMessage}`,
+  };
 
   interaction
-    .reply(createMessageOptions(answer))
+    .reply(
+      createMessageOptions(locales[interaction.locale] ?? locales["en-US"])
+    )
     .catch((error) => console.log(error));
 };
 

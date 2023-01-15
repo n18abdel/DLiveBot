@@ -63,6 +63,13 @@ const processMessage = (message, guildId, displayname, { client }) => {
   });
   return processedMessage;
 };
+
+const embedFieldData = ([name, value, inline]) => ({
+  name,
+  value,
+  inline,
+});
+
 /**
  * Message options for the alert sent on discord
  *
@@ -74,19 +81,34 @@ const processMessage = (message, guildId, displayname, { client }) => {
  * @param params.permlink
  * @param params.guildId
  * @param params.offlineImage
+ * @param params.preferredLocale
  * @param {object} botState
  * @returns {object}
  */
 const getAlertMessageOptions = (
-  { displayname, stream, online, chestValue, permlink, guildId, offlineImage },
+  {
+    displayname,
+    stream,
+    online,
+    chestValue,
+    permlink,
+    guildId,
+    offlineImage,
+    preferredLocale,
+  },
   botState
 ) => {
   const { settings } = botState;
   const msgEmbed = new Discord.MessageEmbed()
     .setColor(settings[guildId].color)
-    .setFooter(
-      processMessage(settings[guildId].footer, guildId, displayname, botState)
-    );
+    .setFooter({
+      text: processMessage(
+        settings[guildId].footer,
+        guildId,
+        displayname,
+        botState
+      ),
+    });
 
   if (online) {
     const now = moment();
@@ -114,26 +136,70 @@ const getAlertMessageOptions = (
           botState
         )
       )
-      .addField("Titre", stream.title)
-      .addField("Catégorie", stream.category.title)
-      .setThumbnail(stream.category.imgUrl)
-      .addField("Spectateurs", String(viewers), true)
-      .setImage(stream.thumbnailUrl)
-      .addField(
-        "En live depuis",
-        hours > 0
-          ? `${hours}h${minutes > 0 ? String(minutes).padStart(2, "0") : ""}`
-          : `${minutes}min`,
-        true
+      .addFields(
+        [
+          [
+            {
+              fr: "Titre",
+            }[preferredLocale] ?? "Title",
+            stream.title,
+          ],
+          [
+            {
+              fr: "Catégorie",
+            }[preferredLocale] ?? "Category",
+            stream.category.title,
+          ],
+        ].map(embedFieldData)
       )
-      .addField("Citrons reçus", `${streamReward} :lemon:`, true)
+      .setThumbnail(stream.category.imgUrl)
+      .addFields(
+        [
+          [
+            {
+              fr: "Spectateurs",
+            }[preferredLocale] ?? "Viewers",
+            String(viewers),
+            true,
+          ],
+        ].map(embedFieldData)
+      )
+      .setImage(stream.thumbnailUrl)
+      .addFields(
+        [
+          [
+            {
+              fr: "En live depuis",
+            }[preferredLocale] ?? "Live for",
+            hours > 0
+              ? `${hours}h${
+                  minutes > 0 ? String(minutes).padStart(2, "0") : ""
+                }`
+              : `${minutes}min`,
+            true,
+          ],
+        ].map(embedFieldData)
+      )
+      .addFields(
+        [
+          [
+            {
+              fr: "Citrons reçus",
+            }[preferredLocale] ?? "Received lemons",
+            `${streamReward} :lemon:`,
+            true,
+          ],
+        ].map(embedFieldData)
+      )
       .setURL(
         `https://dlive.tv/${displayname}?ref=${settings[guildId].referralUsername}`
       );
     if (chestValue) {
       const { chestNames } = settings[guildId];
       const ind = Math.floor(Math.random() * chestNames.length);
-      msgEmbed.addField(chestNames[ind], `${chestValue} :lemon:`, true);
+      msgEmbed.addFields(
+        [[chestNames[ind], `${chestValue} :lemon:`, true]].map(embedFieldData)
+      );
     }
   } else {
     msgEmbed
@@ -206,6 +272,7 @@ const sendAlertMessage = (
             stream,
             online: true,
             guildId,
+            preferredLocale: client.guilds.cache.get(guildId).preferredLocale,
           },
           botState
         ),
@@ -301,6 +368,7 @@ const editAlertMessage = (
               permlink,
               guildId,
               offlineImage,
+              preferredLocale: client.guilds.cache.get(guildId).preferredLocale,
             },
             botState
           ),
@@ -357,4 +425,5 @@ module.exports = {
   editAlertMessage,
   createMessageOptions,
   processSetMessage,
+  embedFieldData,
 };

@@ -2,7 +2,8 @@ const { closeWebSockets } = require("../../helpers/websocket");
 const { updateDatabase } = require("../../helpers/db");
 const { createMessageOptions } = require("../../helpers/message");
 
-const func = async ({ interaction, guildId, botState }) => {
+const func = async ({ interaction, botState }) => {
+  const { guildId } = interaction;
   const {
     settings,
     wasLive,
@@ -25,9 +26,14 @@ const func = async ({ interaction, guildId, botState }) => {
     lastStreams,
     settings
   );
-
+  const locales = {
+    fr: "Toutes les alertes ont été retirées",
+    "en-US": "Every alert has been removed",
+  };
   interaction
-    .reply(createMessageOptions("Toutes les alertes ont été retirées"))
+    .reply(
+      createMessageOptions(locales[interaction.locale] ?? locales["en-US"])
+    )
     .catch((error) => console.log(error));
 };
 
